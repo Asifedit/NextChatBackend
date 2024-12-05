@@ -4,7 +4,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieparser = require("cookie-parser");
 const { handelRequest } = require("./Sockets/handelRequest");
-const router = require("./router/Rought");
+const router = require("./Router/Rought");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
