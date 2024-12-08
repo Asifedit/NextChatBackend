@@ -12,10 +12,7 @@ const app = express();
 
 // List of allowed origins for CORS (can be extended in the future)
 const allowedOrigins = [
-    "http://localhost:5173",
-    "http://192.168.43.107:5173",
-    "http://172.26.112.1:5173",
-    "http://172.23.160.1:5173",
+   "https://f9db9a2c.nextchatfrontend.pages.dev"
 ];
 
 // CORS setup for Express
