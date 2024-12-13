@@ -159,12 +159,53 @@ const Verifi2fa = async (req, res) => {
 
 const verifiCoad = (req, res) => {};
 
-const AddPin = async (req, res) => {
-    const { pin, OldPIN } = req.body;
+const PinOpration = async (req, res) => {
+    const { pin, OldPIN, Type } = req.body;
     if (!pin) {
         return res.status(400).json({ message: "PIN is Require" });
     }
+    if (Type == "Disable PIN") {
+        try {
+            const userConfig = await Userconfig.findOne({
+                username: req.username,
+            });
+            if (!userConfig || !userConfig.Two_Step_Verification_Coad) {
+                return res.status(404).json({
+                    message: "PIN is not enabled or already disabled.",
+                });
+            }
+            if (pin != userConfig.Two_Step_Verification_Coad) {
+                return res.status(400).json({ message: "PIN Not Match." });
+            }
+            const UserConfiguration = await Userconfig.updateOne(
+                { username: req.username },
+                { $unset: { Two_Step_Verification_Coad: "" } }
+            );
+
+            // Check if the operation was acknowledged
+            if (UserConfiguration.acknowledged) {
+                return res
+                    .status(200)
+                    .json({ message: "PIN successfully disabled." });
+            }
+
+            // If update wasn't acknowledged, return an error
+            return res
+                .status(400)
+                .json({ message: "Failed to disable PIN. Please try again." });
+        } catch (error) {
+            // Handle any unexpected errors
+            console.error("Error disabling PIN:", error);
+            return res.status(500).json({
+                message: "An error occurred while disabling the PIN.",
+            });
+        }
+    }
+
     if (OldPIN) {
+        if (!OldPIN) {
+            return res.status(400).json({ message: "OldPIN is Require" });
+        }
         try {
             const UserConfigration = await Userconfig.findOneAndReplace(
                 {
@@ -188,22 +229,36 @@ const AddPin = async (req, res) => {
             console.log(error);
             return res.status(200).json({ message: "Somthing Wrong" });
         }
-    }
-    try {
-        const UserConfigration = await Userconfig.findOneAndUpdate(
-            { username: req.username },
-            {
-                $setOnInsert: {
-                    Two_Step_Verification_Coad: pin,
-                },
-            },
-            { upsert: true }
-        );
-        console.log(UserConfigration);
-        res.status(200).json({ message: "sucesfullly addd" });
-    } catch (error) {
-        console.log(error)
-        res.status(500).json({ message: "Somthing Weong" });
+    } else {
+        try {
+            const UserConfigration = await Userconfig.findOne({
+                username: req.username,
+            });
+           
+
+            if (UserConfigration.Two_Step_Verification_Coad) {
+                return res.status(400).json({ message: "Somthing Weong : We cannot undastand" });
+            }
+            const newUserConfigration = new Userconfig({
+                Two_Step_Verification_Coad: pin,
+            });
+            
+          await  newUserConfigration.save()
+
+            res.status(200).json({ message: "sucesfullly created" });
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Somthing Weong" });
+        }
     }
 };
-module.exports = { Login, Resistor, logout, SetUp2fa, Verifi2fa, AddPin };
+
+
+module.exports = {
+    Login,
+    Resistor,
+    logout,
+    SetUp2fa,
+    Verifi2fa,
+    PinOpration,
+};

@@ -206,7 +206,8 @@ const myprofile = async (req, res) => {
                 username: 1,
                 _id: 1,
                 userAbout: 1,
-                result: 1,
+                bio: 1,
+                BirthDay:1,
                 EnablePinAuth: {
                     $cond: {
                         if: {
@@ -274,7 +275,7 @@ const myprofile = async (req, res) => {
                 },
             },
         },
-    ]);
+    ]);    
     res.status(200).json({ data: user });
 };
 

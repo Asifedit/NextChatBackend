@@ -2,7 +2,6 @@ const Msg = require("../model/msg_model");
 const jwt = require("jsonwebtoken");
 const handelRequest = async (socket, io) => {
     console.log(`User connected: ${socket.id}`);
-    io.emit("dmnmdsmsdnmn","jdsnmkfnksdfksd")
     let name;
     const token = socket.request.headers.cookie
         ?.split("; ")

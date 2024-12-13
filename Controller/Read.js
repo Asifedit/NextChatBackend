@@ -1,23 +1,68 @@
-const Contacets = require("../model/Contain_model");
+const Contain = require("../model/Contain_model");
 const User = require("../model/user_model");
+const Fllow = require("../model/Fllow_model");
 const userprofile = async (req, res) => {
+    const limit = 2;
     const { username, page } = req.body;
+    console.log(page);
+
     if (!username || page == undefined) {
         return res.status(400).json({ message: "Unexpacted Error" });
     }
-    const limit = 1;
-    const Data = await Contacets.find({ CreatBy: username })
-        .skip(page * limit)
-        .limit(limit)
-        .select("-__v");
-
-    if (page < 2) {
-        const user = await User.findOne({ username }).select([
-            "-createdAt",
-            "-updatedAt",
+    if (page == 1) {
+        const UserProfile = await User.aggregate([
+            {
+                $match: {
+                    username: username,
+                },
+            },
+            {
+                $lookup: {
+                    foreignField: "Fllower",
+                    localField: "username",
+                    from: "fllows",
+                    as: "result",
+                },
+            },
+            {
+                $unwind: "$result",
+            },
+            {
+                $project: {
+                    username: 1,
+                    profile: 1,
+                    bio: 1,
+                    BirthDay: 1,
+                    IsFllow: {
+                        $cond: {
+                            if: { $eq: ["$result.FllowBy", req.username] },
+                            then: true,
+                            else: false,
+                        },
+                    },
+                },
+            },
         ]);
-        return res.status(200).json({ contain: Data, user: user });
+        const UserPost = await Contain.find({ CreatBy: req.username })
+            .select(["-__v", "-CreatBy"])
+            .limit(limit);
+        return res.status(200).json([
+            [...UserProfile, { ContainType: "profileData" }],
+            [UserPost, { ContainType: "Posts" }],
+        ]);
+    } else {
+        const UserPost = await Contain.find({ CreatBy: req.username })
+            .select(["-__v", "-CreatBy"])
+            .skip((page - 1) * limit)
+            .limit(limit);
+        
+        if (UserPost.length) {
+            return res
+                .status(200)
+                .json([[UserPost, { ContainType: "Posts" }]]);
+        } else {
+            return res.status(200).json([]);
+        }
     }
-    res.status(200).json({ contain: Data });
 };
 module.exports = { userprofile };

@@ -25,10 +25,10 @@ const UserSchema = new Schema(
         },
         bio: {
             type: String,
-            default: "No bio here",
+            default: "I am using NexChat",
         },
         BirthDay: {
-            type: Date,
+            type: String,
         },
         userAbout: [
             {
