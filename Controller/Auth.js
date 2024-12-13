@@ -6,8 +6,9 @@ const { authenticator } = require("otplib");
 let UserTempDb = {};
 
 const Option = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,  // Prevents client-side JS access
+    secure: true,    // Ensures cookies are only sent over HTTPS
+    sameSite: 'None',
 };
 
 const Resistor = async (req, res) => {
