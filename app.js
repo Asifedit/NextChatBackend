@@ -11,19 +11,9 @@ require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 
-const allowedOrigins = process.env.FRONTEND_URL || [
-    "http://localhost:5173",
-    "http://192.168.43.107:5173",
-];
-
+// Allow all origins
 const corsOptions = {
-    origin: function (origin, callback) {
-        if (allowedOrigins.includes(origin) || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
+    origin: "*", // Allow all origins
     credentials: true,
     methods: ["GET", "POST"],
 };
@@ -68,10 +58,11 @@ const ChackApikey = (req, res, next) => {
         next();
     } else {
         res.json({
-            message: "Canot Access This Future",
+            message: "Cannot Access This Feature",
         });
     }
 };
+
 app.get("/health-check", ChackApikey, (req, res) => {
     res.status(200).json({
         stutas: "UP",
@@ -85,5 +76,5 @@ app.get("/health-check", ChackApikey, (req, res) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
