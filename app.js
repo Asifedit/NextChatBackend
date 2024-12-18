@@ -13,7 +13,7 @@ const app = express();
 
 // Allow all origins
 const corsOptions = {
-    origin: "*", // Allow all origins
+    origin: process.env.FRONTEND_URL, // Allow all origins
     credentials: true,
     methods: ["GET", "POST"],
 };
