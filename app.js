@@ -46,7 +46,11 @@ mongoose
 app.get("/test", (req, res) => {
     res.json({ message: "CORS is working!" });
 });
-
+// app.use((req,res,next) => {
+//     setTimeout(() => {
+//         next()
+//     }, 3000);
+// })
 app.use("/req", router);
 io.on("connection", (socket) => handelRequest(socket, io));
 

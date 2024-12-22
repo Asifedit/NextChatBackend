@@ -39,7 +39,40 @@ const explore = async (req, res) => {
 
     const data = async () => {
         try {
-            const data = await Contain.find().select("-__v").limit(5).lean();
+            // const data = await Contain.find().select("-__v").limit(5).lean();
+            const data = await Contain.aggregate([
+                {
+                    $limit: 5,
+                },
+                {
+                    $addFields: {
+                        postIdAsString: { $toString: "$_id" },
+                    },
+                },
+                {
+                    $lookup: {
+                        localField: "postIdAsString",
+                        foreignField: "postId",
+                        from: "likes",
+                        as: "totallike",
+                    },
+                },
+                {
+                    $addFields: {
+                        TotalLIke: {
+                            $size: { $ifNull: ["$totallike", []] },
+                        },
+                    },
+                },
+                {
+                    $project: {
+                        __v: 0,
+                        totallike: 0,
+                    },
+                },
+            ]);
+            console.log(data);
+
             if (!data) {
                 return false;
             }
@@ -88,6 +121,7 @@ const follow = async (req, res) => {
 
     req.io.to(req.username).emit("Contacet", user);
     req.io.to(username).emit("Contacet", user);
+    res.status(200).json({ message: "susessfully fllow" });
 };
 
 const Contacets = async (req, res) => {
@@ -207,7 +241,7 @@ const myprofile = async (req, res) => {
                 _id: 1,
                 userAbout: 1,
                 bio: 1,
-                BirthDay:1,
+                BirthDay: 1,
                 EnablePinAuth: {
                     $cond: {
                         if: {
@@ -275,7 +309,7 @@ const myprofile = async (req, res) => {
                 },
             },
         },
-    ]);    
+    ]);
     res.status(200).json({ data: user });
 };
 

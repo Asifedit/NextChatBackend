@@ -5,6 +5,7 @@ const userconfigSchema = new Schema(
     {
         username: {
             type: String,
+            required: true,
         },
         TwoFa_App_Token: {
             type: String,

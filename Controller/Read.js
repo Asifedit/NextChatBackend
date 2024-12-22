@@ -1,16 +1,14 @@
 const Contain = require("../model/Contain_model");
 const User = require("../model/user_model");
-const Fllow = require("../model/Fllow_model");
 const userprofile = async (req, res) => {
-    const limit = 2;
-    const { username, page } = req.body;
-    console.log(page);
+    const limit = process.env.SerchFrofileDAtaLimit || 2;
 
+    const { username, page } = req.body;
     if (!username || page == undefined) {
         return res.status(400).json({ message: "Unexpacted Error" });
     }
     if (page == 1) {
-        const UserProfile = await User.aggregate([
+        const UserProfileData = await User.aggregate([
             {
                 $match: {
                     username: username,
@@ -25,7 +23,10 @@ const userprofile = async (req, res) => {
                 },
             },
             {
-                $unwind: "$result",
+                $unwind: {
+                    path: "$result",
+                    preserveNullAndEmptyArrays: true,
+                },
             },
             {
                 $project: {
@@ -44,10 +45,11 @@ const userprofile = async (req, res) => {
             },
         ]);
         const UserPost = await Contain.find({ CreatBy: req.username })
-            .select(["-__v", "-CreatBy"])
+            .select(["-__v"])
             .limit(limit);
+
         return res.status(200).json([
-            [...UserProfile, { ContainType: "profileData" }],
+            [...UserProfileData, { ContainType: "profileData" }],
             [UserPost, { ContainType: "Posts" }],
         ]);
     } else {
@@ -55,14 +57,18 @@ const userprofile = async (req, res) => {
             .select(["-__v", "-CreatBy"])
             .skip((page - 1) * limit)
             .limit(limit);
-        
+
         if (UserPost.length) {
-            return res
-                .status(200)
-                .json([[UserPost, { ContainType: "Posts" }]]);
+            return res.status(200).json([[UserPost, { ContainType: "Posts" }]]);
         } else {
             return res.status(200).json([]);
         }
     }
 };
-module.exports = { userprofile };
+const ViweSinglePOst = async (req, res) => {
+    console.log(req.body);
+    const post = await Contain.findById(req.body.pid).select("-__v")
+    console.log(post);
+    res.status(200).json(post);
+};
+module.exports = { userprofile, ViweSinglePOst };
