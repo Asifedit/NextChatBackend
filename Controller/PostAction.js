@@ -1,22 +1,25 @@
 const LikeModel = require("../model/Likes_model");
 
 const CommentModel = require("../model/Comment_model");
-
 const Like = async (req, res) => {
     const { pid } = req.body;
-    console.log(req.body);
-
     try {
         if (!pid) {
             return res
                 .status(400)
                 .json({ message: "User ID and Post ID are required" });
         }
-        const newLike = new LikeModel({
-            postId: pid,
-            likeUserid: req.username,
-        });
-        await newLike.save();
+        const newLike = await LikeModel.findOneAndUpdate(
+            { postId: pid },
+            {
+                $set: { postId: pid, likeUserid: req.username },
+            },
+            {
+                upsert: true,
+            }
+        );
+        console.log(newLike);
+
         res.status(200).json({
             message: "Post liked successfully",
         });
@@ -46,8 +49,9 @@ const comment = async (req, res) => {
 };
 const GetComment = async (req, res) => {
     const { pid, cflag } = req.body;
-    const limit = 7;
-    // const Command = await CommentModel.find({ postId: pid }).select("-__v");
+    console.log(cflag);
+
+    const limit = 1;
     try {
         const Command = await CommentModel.aggregate([
             {
@@ -59,7 +63,7 @@ const GetComment = async (req, res) => {
                 $skip: (cflag - 1) * limit,
             },
             {
-                $limit: cflag * limit,
+                $limit: limit,
             },
             {
                 $lookup: {
@@ -94,12 +98,11 @@ const GetComment = async (req, res) => {
                 },
             },
         ]);
-        console.log(Command);
+        console.log("comment", Command);
         res.status(200).json(Command);
     } catch (error) {
         console.log(error);
-        res.status(400).jasn({message:"erroe "})
-        
+        res.status(400).json({ message: "erroe " });
     }
 };
 module.exports = { Like, comment, GetComment };

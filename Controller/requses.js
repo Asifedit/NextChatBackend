@@ -42,7 +42,7 @@ const explore = async (req, res) => {
             // const data = await Contain.find().select("-__v").limit(5).lean();
             const data = await Contain.aggregate([
                 {
-                    $limit: 5,
+                    $limit: 1,
                 },
                 {
                     $addFields: {
@@ -51,27 +51,38 @@ const explore = async (req, res) => {
                 },
                 {
                     $lookup: {
-                        localField: "postIdAsString",
-                        foreignField: "postId",
                         from: "likes",
-                        as: "totallike",
+                        localField: "postIdAsString", 
+                        foreignField: "postId",
+                        as: "totallike", 
                     },
                 },
                 {
                     $addFields: {
-                        TotalLIke: {
+                        TotalLike: {
                             $size: { $ifNull: ["$totallike", []] },
+                        },
+                        IsLike: {
+                            $cond: {
+                                if: {
+                                    $in: [
+                                        req.username,
+                                        "$totallike.likeUserid",
+                                    ],
+                                },
+                                then: true,
+                                else: false,
+                            },
                         },
                     },
                 },
                 {
                     $project: {
                         __v: 0,
-                        totallike: 0,
+                        "totallike":0
                     },
                 },
             ]);
-            console.log(data);
 
             if (!data) {
                 return false;

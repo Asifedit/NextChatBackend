@@ -1,8 +1,7 @@
-const Contain = require("../model/Contain_model");
-const User = require("../model/user_model");
-const userprofile = async (req, res) => {
+const Contain = require("../../model/Contain_model");
+const User = require("../../model/user_model");
+const userprofile = async (req, res) => {    
     const limit = process.env.SerchFrofileDAtaLimit || 2;
-
     const { username, page } = req.body;
     if (!username || page == undefined) {
         return res.status(400).json({ message: "Unexpacted Error" });
@@ -71,4 +70,4 @@ const ViweSinglePOst = async (req, res) => {
     console.log(post);
     res.status(200).json(post);
 };
-module.exports = { userprofile, ViweSinglePOst };
+module.exports = { userprofile };

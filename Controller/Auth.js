@@ -3,13 +3,26 @@ const Userconfig = require("../model/UserConfig");
 const jwt = require("jsonwebtoken");
 const QRCode = require("qrcode");
 const { authenticator } = require("otplib");
+const TempToken = require("../model/tempToken");
+const verifyEmail = require("../utils/ValidetEmail");
+const SenEmail = require("../utils/Nodemaler");
 let UserTempDb = {};
 
 const Option = {
-    httpOnly: true, 
-    secure: true, 
+    httpOnly: true,
+    secure: true,
     sameSite: "None",
 };
+
+function CreateToken(length = 6) {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let token = "";
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        token += characters[randomIndex];
+    }
+    return token;
+}
 
 const Resistor = async (req, res) => {
     const { username, password, email } = req.body || req.headers;
@@ -19,21 +32,96 @@ const Resistor = async (req, res) => {
             .status(400)
             .json({ message: "Please provide all required fields" });
     }
+    const chackemail = await verifyEmail(email);
+
+    if (!chackemail.valid) {
+        return res.status(400).json({ message: chackemail.message });
+    }
 
     try {
         const userExists = await User.findOne({ username });
-
-        // If user already exists, return an error.
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        const refreshToken = jwt.sign(
-            { username },
-            process.env.jwt_RefreshToken_Secret,
-            { expiresIn: process.env.jwt_RefreshToken_Expair }
+        const OTP = await CreateToken();
+        const token = await TempToken.findOneAndUpdate(
+            { username: username },
+            {
+                $set: {
+                    username: username,
+                    token: OTP,
+                },
+            },
+            {
+                upsert: true,
+                new: true,
+            }
+        );
+        const mailResponce = await SenEmail("verification", email, {
+            name: username,
+            verificationCode: token.token,
+        });
+        if (!mailResponce.success) {
+            return res.status(200).json({ messages: "error to send code" });
+        }
+
+        const VerificationToken = jwt.sign(
+            { username, password, email, token: token.token },
+            process.env.jwt_VerificationToken,
+            { expiresIn: process.env.jwt_VerificationToken_Expair }
         );
 
+        return res
+            .status(201)
+            .cookie("VerificationToken", VerificationToken, Option)
+            .json({ message: "User created successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Something went wrong" });
+    }
+};
+
+const VerifiResistor = async (req, res) => {
+    const VerificationToken =
+        req.cookies.VerificationToken || req.body.VerificationToken;
+
+    if (!VerificationToken)
+        return res.status(300).json({ messages: "Not Poperly Resistor" });
+
+    const verifi = jwt.verify(
+        VerificationToken,
+        process.env.jwt_VerificationToken
+    );
+
+    if (!verifi) {
+        return res.status(400).json({ message: "Invalid Token" });
+    }
+    const { username, password, email, token } = verifi;
+    if (!username || !password || !email || !token) {
+        return res.status(404).json({ message: "Modification Not Allow !" });
+    }
+    const userTOKEN = await TempToken.findOne({
+        username,
+        token,
+    });
+    if (!userTOKEN)
+        return res.status(400).json({ messages: "token not found" });
+    if (userTOKEN.token != token) {
+        return res.status(400).json({ message: "token not matching" });
+    }
+    const refreshToken = jwt.sign(
+        { username },
+        process.env.jwt_RefreshToken_Secret,
+        { expiresIn: process.env.jwt_RefreshToken_Expair }
+    );
+    const accessToken = jwt.sign(
+        { username },
+        process.env.jwt_AcessToken_Secret,
+        { expiresIn: process.env.jwt_AcessToken_Expair }
+    );
+
+    try {
         const newUser = new User({
             username,
             password,
@@ -43,20 +131,16 @@ const Resistor = async (req, res) => {
 
         await newUser.save();
 
-        const accessToken = jwt.sign(
-            { username, ID: newUser._id },
-            process.env.jwt_AcessToken_Secret,
-            { expiresIn: process.env.jwt_AcessToken_Expair }
-        );
-
         return res
-            .status(201) // Using 201 status code for resource creation
+            .status(200)
+            .clearCookie("VerificationToken")
             .cookie("AccessToken", accessToken, Option)
             .cookie("RefreshToken", refreshToken, Option)
-            .json({ message: "User created successfully", newUser });
+            .json({ message: "User created successfully" });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "Something went wrong" });
+
+        res.status(400).json({ message: "Error to Resistor" });
     }
 };
 
@@ -79,7 +163,18 @@ const Login = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: "Incorrect password" });
         }
-
+        const ChackTwoFaStutas = await Userconfig.findOne({
+            username: username,
+        });
+        if (ChackTwoFaStutas.TwoFa_App_Token) {
+            const Lc = jwt.sign({ username }, process.env.jwt_LC_Token, {
+                expiresIn: process.env.jwt_LC_Token_Expaire,
+            });
+            return res.status(200).cookie("LcToken", Lc, Option).json({
+                message: "Next Stap Verifi",
+                RediractOn: "TwoFaAppVerification",
+            });
+        }
         const accessToken = jwt.sign(
             { username },
             process.env.jwt_AcessToken_Secret,
@@ -90,6 +185,8 @@ const Login = async (req, res) => {
             process.env.jwt_RefreshToken_Secret,
             { expiresIn: process.env.jwt_RefreshToken_Expair }
         );
+        user.refToken = refreshToken;
+        await user.save();
 
         return res
             .status(200)
@@ -159,7 +256,6 @@ const Verifi2fa = async (req, res) => {
                         },
                     }
                 );
-                console.log(daat);
                 return res.status(200).json({
                     message: "App authenticator disabled successfully.",
                 });
@@ -169,7 +265,7 @@ const Verifi2fa = async (req, res) => {
                     .json({ message: "Invalid TwoFactor code." });
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
 
             return res.status(500).json({
                 message:
@@ -287,7 +383,7 @@ const PinOpration = async (req, res) => {
                 Newpin: UserConfigration.UserSetPin,
             });
         } catch (error) {
-            console.log(error);
+            console.error(error);
             return res.status(200).json({ message: "Somthing Wrong" });
         }
     } else {
@@ -313,17 +409,69 @@ const PinOpration = async (req, res) => {
             }
             res.status(200).json({ message: "sucesfullly created" });
         } catch (error) {
-            console.log(error);
+            console.error(error);
             res.status(500).json({ message: "Somthing Weong" });
         }
     }
 };
 
+const Verifi2faToken = async (req, res) => {
+    const { code } = req.body;
+    const Lctoken = req.cookies.LcToken;
+    if (!code) {
+        return res.status(400).json({ message: "code is require" });
+    }
+    if (!Lctoken) {
+        return res.status(400).json({ messages: "token not found" });
+    }
+    try {
+        const username = jwt.verify(Lctoken, process.env.jwt_LC_Token).username;
+        const configration = await Userconfig.findOne({
+            username: username,
+        });
+        const isValid = authenticator.verify({
+            token: code,
+            secret: configration.TwoFa_App_Token,
+        });
+        if (!isValid) {
+            return res.status(400).json({ message: "Code Not Match" });
+        }
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const accessToken = jwt.sign(
+            { username },
+            process.env.jwt_AcessToken_Secret,
+            { expiresIn: process.env.jwt_AcessToken_Expair }
+        );
+        const refreshToken = jwt.sign(
+            { username },
+            process.env.jwt_RefreshToken_Secret,
+            { expiresIn: process.env.jwt_RefreshToken_Expair }
+        );
+        user.refToken = refreshToken;
+        await user.save();
+
+        return res
+            .status(200)
+            .clearCookie("LcToken")
+            .cookie("AccessToken", accessToken, Option)
+            .cookie("RefreshToken", refreshToken, Option)
+            .json({ message: "User logged in successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "error during process" })
+        console.log(error)
+    }
+};
+
 module.exports = {
+    VerifiResistor,
     Login,
     Resistor,
     logout,
     SetUp2fa,
     Verifi2fa,
     PinOpration,
+    Verifi2faToken,
 };

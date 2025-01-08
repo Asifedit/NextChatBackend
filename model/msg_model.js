@@ -28,7 +28,7 @@ msgSchema.pre("save", function (next) {
     let minutes = currentTime.getMinutes();
     const period = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
-    hours = hours ? hours : 12; 
+    hours = hours ? hours : 12;
     minutes = minutes < 10 ? "0" + minutes : minutes;
     this.time = `${hours}:${minutes} ${period}`;
     next();
