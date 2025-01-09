@@ -1,1 +1,2 @@
-https://51dc039d.nextchatfrontend.pages.dev/
+
+nextchatfrontend.pages.dev
