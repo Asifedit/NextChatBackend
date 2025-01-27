@@ -32,11 +32,11 @@ const Resistor = async (req, res) => {
             .status(400)
             .json({ message: "Please provide all required fields" });
     }
-    const chackemail = await verifyEmail(email);
+    // const chackemail = await verifyEmail(email);
 
-    if (!chackemail.valid) {
-        return res.status(400).json({ message: chackemail.message });
-    }
+    // if (!chackemail.valid) {
+    //     return res.status(400).json({ message: chackemail.message });
+    // }
 
     try {
         const userExists = await User.findOne({ username });
@@ -58,13 +58,15 @@ const Resistor = async (req, res) => {
                 new: true,
             }
         );
-        const mailResponce = await SenEmail("verification", email, {
-            name: username,
-            verificationCode: token.token,
-        });
-        if (!mailResponce.success) {
-            return res.status(200).json({ messages: "error to send code" });
-        }
+        console.log(OTP);
+        
+        // const mailResponce = await SenEmail("verification", email, {
+        //     name: username,
+        //     verificationCode: token.token,
+        // });
+        // if (!mailResponce.success) {
+        //     return res.status(200).json({ messages: "error to send code" });
+        // }
 
         const VerificationToken = jwt.sign(
             { username, password, email, token: token.token },
@@ -166,14 +168,16 @@ const Login = async (req, res) => {
         const ChackTwoFaStutas = await Userconfig.findOne({
             username: username,
         });
-        if (ChackTwoFaStutas.TwoFa_App_Token) {
-            const Lc = jwt.sign({ username }, process.env.jwt_LC_Token, {
-                expiresIn: process.env.jwt_LC_Token_Expaire,
-            });
-            return res.status(200).cookie("LcToken", Lc, Option).json({
-                message: "Next Stap Verifi",
-                RediractOn: "TwoFaAppVerification",
-            });
+        if (ChackTwoFaStutas) {
+            if (ChackTwoFaStutas?.TwoFa_App_Token) {
+                const Lc = jwt.sign({ username }, process.env.jwt_LC_Token, {
+                    expiresIn: process.env.jwt_LC_Token_Expaire,
+                });
+                return res.status(200).cookie("LcToken", Lc, Option).json({
+                    message: "Next Stap Verifi",
+                    RediractOn: "TwoFaAppVerification",
+                });
+            }
         }
         const accessToken = jwt.sign(
             { username },

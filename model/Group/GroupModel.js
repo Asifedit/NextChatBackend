@@ -22,5 +22,8 @@ const GroupSchma = new Schema({
     Role: {
         type: Array,
     },
+    GroupPicture: {
+        type:String,
+    }
 });
 module.exports = mongoose.model("Group", GroupSchma);

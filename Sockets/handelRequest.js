@@ -5,27 +5,67 @@ const GroupModel = require("../model/Group/GroupModel");
 const handelRequest = async (socket, io) => {
     let name = socket.username;
     console.log(`${name} connected with ${socket.id}`);
+    socket.join(name);
 
-    // WebRTC signaling (offer/answer/candidate)
-    socket.on("offer", (offer) => {
-        socket.broadcast.emit("offer", offer);
+    socket.on("start:call", async ({ username }) => {
+        if (!io.sockets.adapter.rooms.has(username)) {
+            socket.emit("Error", { message: "User Not Connected" });
+            return;
+        }
+        socket.to(username).emit("incoming:call", { username: name });
     });
 
-    socket.on("answer", (answer) => {
-        socket.broadcast.emit("answer", answer);
+    socket.on("call:responce", async ({ username, responce }) => {
+        socket.to(username).emit("call:responce", { From: name, responce });
     });
 
-    socket.on("candidate", (candidate) => {
-        socket.broadcast.emit("candidate", candidate);
+    // Assuming you're using Socket.IO to emit and listen to events
+    socket.on("offer", ({ offer, username }) => {
+        console.log("Received offer from:", username);
+
+        // Check if the user is connected before forwarding the offer
+        if (!io.sockets.adapter.rooms.has(username)) {
+            socket.emit("Error", { message: "User Not Connected" });
+            return;
+        }
+
+        // Forward the offer to the other user
+        socket.to(username).emit("offer", { offer, username: name });
+    });
+
+    socket.on("answer", ({ answer, username }) => {
+        console.log("Sending answer to:", username);
+        // Forward the answer to the appropriate user
+        socket.to(username).emit("answer", { answer, username: name });
+    });
+
+    socket.on("candidate", ({ eventCandidate, username }) => {
+        console.log(
+            "Forwarding ICE candidate to:",
+            username,
+            "from",
+            socket.id
+        );
+        // Forward the ICE candidate to the other user
+        socket.to(username).emit("candidate", eventCandidate);
     });
 
     // Handling direct and group messages
     socket.on("Send", async (message) => {
         try {
             const { text, for: target } = message;
-
-            // If the target is a group, ensure the group exists and broadcast the message
             if (io.sockets.adapter.rooms.has(target)) {
+                const message = {
+                    For: target,
+                    Msg: text,
+                    From: name,
+                    time: new Date().toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                    }),
+                };
+                socket.to(target).emit("receiveMessage", message);
                 const newMessage = new Msg({
                     For: target,
                     Msg: text,
@@ -33,10 +73,7 @@ const handelRequest = async (socket, io) => {
                     isSend: true,
                 });
                 await newMessage.save();
-                socket.to(target).emit("receiveMessage", newMessage); // Broadcast to the group
-                socket.to(name).emit("receiveMessage", newMessage); // Send confirmation to the sender
             } else {
-                // If the target is a direct message, treat it as unsent message
                 const newMessage = new Msg({
                     For: target,
                     Msg: text,
@@ -46,10 +83,10 @@ const handelRequest = async (socket, io) => {
                 await newMessage.save();
                 socket.to(name).emit("receiveMessage", newMessage); // Send confirmation to the sender
                 io.emit("receiveMessage", newMessage); // Broadcast to everyone (for the receiver)
-                socket.to(target).emit("receiveMessage", newMessage); // Send the message to the receiver
+                socket.to(target).emit("", newMessage); // Send the message to the receiver
             }
         } catch (error) {
-            sendError(socket, "Error while sending message.");
+            console.log("Error while sending message.", error);
         }
     });
 
@@ -66,10 +103,10 @@ const handelRequest = async (socket, io) => {
             if (oldMsg) {
                 socket.to(name).emit("receiveMessage", oldMsg); // Send updated message to the user
             } else {
-                sendError(socket, "Message not found or already sent.");
+                console.log("Message not found or already sent.");
             }
         } catch (error) {
-            sendError(socket, "Error while unsending message.");
+            console.log("Error while unsending message.", error);
         }
     });
 
@@ -80,7 +117,7 @@ const handelRequest = async (socket, io) => {
         try {
             // Check if the user is already in the group
             // if (socket.rooms.has(groupname)) {
-            //     sendError(
+            //     console.log(
             //         socket,
             //         `You are already in the group "${groupname}".`
             //     );
@@ -92,7 +129,7 @@ const handelRequest = async (socket, io) => {
             // Notify other users in the group about the new user
             socket.to(groupname).emit("User:Join", name); // Notify other group members of the new user
         } catch (error) {
-            sendError(socket, "Error while joining the group.");
+            console.log("Error while joining the group.", error);
         }
     });
 
@@ -109,7 +146,7 @@ const handelRequest = async (socket, io) => {
 
             socket.to(groupname).emit("Group:Msg:Receved", newMessage);
         } catch (error) {
-            sendError("Error while sending group message.");
+            console.log("Error while sending group message.");
         }
     });
 

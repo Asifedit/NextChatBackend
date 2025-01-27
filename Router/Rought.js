@@ -21,8 +21,12 @@ const {
     Verifi2fa,
     PinOpration,
     VerifiResistor,
-    Verifi2faToken
+    Verifi2faToken,
 } = require("../Controller/Auth");
+const {Search}=require("../Controller/Serch")
+
+const path = require("path");
+
 const { Verify } = require("../config/verify");
 const upload = require("../config/Multer");
 const { userprofile } = require("../Controller/Read/UserProfile");
@@ -31,13 +35,21 @@ const { report } = require("../Controller/Report");
 
 router.get("/contact", Verify, Contacets);
 router.get("/mygroup", Verify, Contacets);
-
+router.get("/file", (req, res) => {
+    const filePath = path.join(__dirname, "../Public/test.jpg");
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(err);
+            res.status(404).send("File not found");
+        }
+    });
+});
 router.post("/login", Login);
 router.post("/register", Resistor);
 router.post("/register/verifi", VerifiResistor);
 router.post("/follow", Verify, follow);
 router.post("/logout", Verify, logout);
-router.post("/findbyusername", FindUser);
+router.post("/find", Search);
 router.post("/post/get", ViweSinglePOst);
 router.post("/explore", Verify, explore);
 router.post("/action/like", Verify, Like);
