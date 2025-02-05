@@ -32,6 +32,29 @@ const Resistor = async (req, res) => {
             .status(400)
             .json({ message: "Please provide all required fields" });
     }
+
+    const usernameREGEX = /^[A-Za-z]+.+\d+.*$/;
+    const emailREGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+    const PasswordREGEX =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{8,}$/;
+    
+    if (!usernameREGEX.test(username)) {
+        return res.status(400).json({
+            message:
+                "Username must start with letters and contain at-least one number",
+        });
+    }
+    if (!emailREGEX.test(email)) {
+        return res.status(400).json({ message: "Invalid email address" });
+    }
+
+    if (!PasswordREGEX.test(password)) {
+        return res.status(400).json({
+            message:
+                "Password must contain uppercase , lowercase ,number, special character, and be at least 8 characters long.",
+        });
+    }
+
     // const chackemail = await verifyEmail(email);
 
     // if (!chackemail.valid) {
@@ -59,14 +82,14 @@ const Resistor = async (req, res) => {
             }
         );
         console.log(OTP);
-        
-         const mailResponce = await SenEmail("verification", email, {
-             name: username,
-        verificationCode: token.token,
-        });
-        if (!mailResponce.success) {
-             return res.status(200).json({ messages: "error to send code" });
-         }
+
+        // const mailResponce = await SenEmail("verification", email, {
+        //     name: username,
+        //     verificationCode: token.token,
+        // });
+        // if (!mailResponce.success) {
+        //     return res.status(200).json({ messages: "error to send code" });
+        // }
 
         const VerificationToken = jwt.sign(
             { username, password, email, token: token.token },
@@ -78,6 +101,7 @@ const Resistor = async (req, res) => {
             .status(201)
             .cookie("VerificationToken", VerificationToken, Option)
             .json({ message: "User created successfully" });
+        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Something went wrong" });
@@ -464,8 +488,8 @@ const Verifi2faToken = async (req, res) => {
             .cookie("RefreshToken", refreshToken, Option)
             .json({ message: "User logged in successfully" });
     } catch (error) {
-        res.status(500).json({ message: "error during process" })
-        console.log(error)
+        res.status(500).json({ message: "error during process" });
+        console.log(error);
     }
 };
 

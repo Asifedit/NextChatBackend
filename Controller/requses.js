@@ -121,13 +121,13 @@ const follow = async (req, res) => {
         { upsert: true }
     );
     // await Contactadded.save();
-    console.log(Contactadded);
 
     const user = await User.findOne({ username: username }).select([
         "username",
         "profile",
         "Bio",
     ]);
+    
     console.log(user);
 
     req.io.to(req.username).emit("Contacet", user);
@@ -165,7 +165,6 @@ const Contacets = async (req, res) => {
         ]);
 
         if (UserContact.length >= 1) {
-            console.log(UserContact);
             return res.status(200).json(UserContact);
         }
         res.status(400).json({ message: "No Contacet Found" });

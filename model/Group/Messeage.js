@@ -20,19 +20,15 @@ const MessageSchema = new Schema(
 );
 
 MessageSchema.virtual("Time").get(function () {
-    return this.createdAt.toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-    });
+    return this.createdAt; 
 });
 
-MessageSchema.set("toJSON", {
+MessageSchema.set("toJSON", { 
     virtuals: true,
 });
 
 MessageSchema.set("toObject", {
     virtuals: true,
-});
+}); 
 
 module.exports = mongoose.model("GroupMessage", MessageSchema);

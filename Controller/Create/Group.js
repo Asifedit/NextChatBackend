@@ -19,34 +19,32 @@ const CreateGroup = async (req, res) => {
         Role: "Admin",
     });
     await newGroup.save();
-    res.status(200).json({ messeage: "Group Created" });
+    res.status(200).json({ newGroup, messeage: "Group Created" });
 };
 
 const CreatePool = async (req, res) => {
     const { topic, options, explanation, groupname } = req.body;
-    console.log(req.body);
+    console.log(options);
 
     if (!topic || !options || !groupname) {
         res.status(400).json({ message: "Missing required fields" });
         return;
     }
-
-    const formattedOptions = options.reduce((acc, option) => {
-        acc[option] = 0; // Initialize each option with a default value of 0
-        return acc;
-    }, {});
-
+    let option = [];
+    options.map((item) => {
+        option.push({ [item]: 0 });
+    });
     const newPool = new CreatePoolModel({
         GroupId: groupname,
         Question: topic,
-        Options: formattedOptions,
+        Options: option,
         Explanation: explanation || null,
         CreatedBy: req.username,
     });
 
     await newPool.save();
 
-    res.status(200).json({ message: "Pool Created" });
+    res.status(200).json({ newPool, message: "Pool Created" });
 };
 
 module.exports = { CreateGroup, CreatePool };

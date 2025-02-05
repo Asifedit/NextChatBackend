@@ -18,20 +18,18 @@ const msgSchema = new Schema({
         type: Boolean,
         default: false,
     },
-    time: {
-        type: String,
-    },
+    
+},{timestamps:true});
+msgSchema.virtual("Time").get(function () {
+    return this.createdAt;
 });
-msgSchema.pre("save", function (next) {
-    const currentTime = new Date();
-    let hours = currentTime.getHours();
-    let minutes = currentTime.getMinutes();
-    const period = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    this.time = `${hours}:${minutes} ${period}`;
-    next();
+
+msgSchema.set("toJSON", {
+    virtuals: true,
 });
+
+msgSchema.set("toObject", {
+    virtuals: true,
+}); 
 
 module.exports = mongoose.model("Message", msgSchema);

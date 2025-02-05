@@ -71,3 +71,4 @@ const Verify = async (req, res, next) => {
     }
 };
 module.exports = { Verify };
+ 

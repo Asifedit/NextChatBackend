@@ -2,10 +2,11 @@ const Msg = require("../model/msg_model");
 const jwt = require("jsonwebtoken");
 const MesseageModel = require("../model/Group/Messeage");
 const GroupModel = require("../model/Group/GroupModel");
+const GroupMessage = require("../model/Group/Messeage");
+const OnConnection = require("./Event/OnConnection");
 const handelRequest = async (socket, io) => {
     let name = socket.username;
-    console.log(`${name} connected with ${socket.id}`);
-    socket.join(name);
+    OnConnection(name,socket);
 
     socket.on("start:call", async ({ username }) => {
         if (!io.sockets.adapter.rooms.has(username)) {
@@ -115,18 +116,13 @@ const handelRequest = async (socket, io) => {
         const { groupname } = data;
 
         try {
-            // Check if the user is already in the group
-            // if (socket.rooms.has(groupname)) {
-            //     console.log(
-            //         socket,
-            //         `You are already in the group "${groupname}".`
-            //     );
-            //     return;
-            // }
+            if (socket.rooms.has(groupname)) {
+                console.log(`You are already in the group "${groupname}".`);
+                return;
+            }
 
             socket.join(groupname);
 
-            // Notify other users in the group about the new user
             socket.to(groupname).emit("User:Join", name); // Notify other group members of the new user
         } catch (error) {
             console.log("Error while joining the group.", error);
@@ -149,11 +145,13 @@ const handelRequest = async (socket, io) => {
             console.log("Error while sending group message.");
         }
     });
+   
 
     // Handle disconnecting from the socket
     socket.on("disconnect", () => {
         socket.leave(name);
     });
+    
 };
 
 module.exports = { handelRequest };

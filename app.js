@@ -11,13 +11,13 @@ const ejs = require("ejs");
 const path = require("path");
 const PORT = process.env.PORT || 5000;
 const app = express();
-
+const { instrument } = require("@socket.io/admin-ui");
 const corsOptions = {
     origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST"],
 };
-
+app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieparser());
@@ -28,6 +28,11 @@ const server = http.createServer(app);
 const io = require("socket.io")(server, {
     transports: ["websocket", "polling"],
     cors: true,
+});
+
+instrument(io, {
+    namespaceName: "/custom/username=asif",
+    auth: false, 
 });
 
 mongoose
@@ -60,19 +65,7 @@ app.use((req, res, next) => {
     req.io = io;
     next();
 });
-app.use("/req", router);
-
-app.set("view engine", "ejs");
-
-app.set("views", path.join(__dirname, "/templates"));
-
-app.get("/welcome", (req, res) => {
-    const data = {
-        name: "John Doe",
-    };
-
-    res.render("welcome", data);
-});
+app.use("/req", router); 
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

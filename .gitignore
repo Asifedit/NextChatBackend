@@ -1,6 +1,7 @@
 # Node modules
 node_modules/
-Public/
+
+Public/* */
 
 # Environment variables
 .env

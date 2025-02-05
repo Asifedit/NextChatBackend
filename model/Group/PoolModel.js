@@ -9,7 +9,7 @@ const PoolSchma = new Schema(
             required: true,
         },
         Options: {
-            type: Object,
+            type: Array,
             required: true,
         },
         Question: {

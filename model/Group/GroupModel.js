@@ -12,15 +12,12 @@ const GroupSchma = new Schema({
         required: true,
     },
     MaxMembers: {
-        type: Array,
+        type: Number,
         required: true,
     },
     GroupDescription: {
         type: String,
         required:true,
-    },
-    Role: {
-        type: Array,
     },
     GroupPicture: {
         type:String,
