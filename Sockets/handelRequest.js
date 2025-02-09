@@ -1,4 +1,4 @@
-const Msg = require("../model/msg_model");
+const MsgModel = require("../model/msg_model");
 const jwt = require("jsonwebtoken");
 const MesseageModel = require("../model/Group/Messeage");
 const GroupModel = require("../model/Group/GroupModel");
@@ -6,7 +6,13 @@ const GroupMessage = require("../model/Group/Messeage");
 const OnConnection = require("./Event/OnConnection");
 const handelRequest = async (socket, io) => {
     let name = socket.username;
-    OnConnection(name,socket);
+
+    // console.log(Array.from(socket.rooms));
+    OnConnection(name, socket);
+    if (!name) {
+        socket.disconnect();
+        return;
+    }
 
     socket.on("start:call", async ({ username }) => {
         if (!io.sockets.adapter.rooms.has(username)) {
@@ -52,39 +58,48 @@ const handelRequest = async (socket, io) => {
     });
 
     // Handling direct and group messages
-    socket.on("Send", async (message) => {
+    socket.on("Send", async (message, callback) => {
+        const { text, for: target } = message;
         try {
-            const { text, for: target } = message;
             if (io.sockets.adapter.rooms.has(target)) {
-                const message = {
-                    For: target,
-                    Msg: text,
-                    From: name,
-                    time: new Date().toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                    }),
-                };
-                socket.to(target).emit("receiveMessage", message);
-                const newMessage = new Msg({
+                const newMessage = new MsgModel({
                     For: target,
                     Msg: text,
                     From: name,
                     isSend: true,
                 });
                 await newMessage.save();
+
+                const { For, Msg, createdAt, isSend, From } = newMessage;
+                socket
+                    .to(target)
+                    .emit("receiveMessage", {
+                        For,
+                        Msg,
+                        createdAt,
+                        isSend,
+                        From,
+                    });
+                callback(newMessage);
             } else {
-                const newMessage = new Msg({
+                const newMessage = new MsgModel({
                     For: target,
                     Msg: text,
                     From: name,
                     isSend: false,
                 });
                 await newMessage.save();
-                socket.to(name).emit("receiveMessage", newMessage); // Send confirmation to the sender
-                io.emit("receiveMessage", newMessage); // Broadcast to everyone (for the receiver)
-                socket.to(target).emit("", newMessage); // Send the message to the receiver
+                const { For, Msg, createdAt, isSend, From } = newMessage;
+
+                socket
+                    .to(target)
+                    .emit("receiveMessage", {
+                        For,
+                        Msg,
+                        createdAt,
+                        isSend,
+                        From,
+                    }); // Send the message to the receiver
             }
         } catch (error) {
             console.log("Error while sending message.", error);
@@ -95,7 +110,7 @@ const handelRequest = async (socket, io) => {
     socket.on("UnSend:MSG", async (data) => {
         const { username } = data;
         try {
-            const oldMsg = await Msg.findOneAndUpdate(
+            const oldMsg = await MsgModel.findOneAndUpdate(
                 { username, isSend: false },
                 { isSend: true },
                 { new: true }
@@ -145,13 +160,21 @@ const handelRequest = async (socket, io) => {
             console.log("Error while sending group message.");
         }
     });
-   
+
+    socket.on("poolVote", async (data) => {
+        console.log(data);
+        socket.to(data.groupname).emit("poolVote", data);
+    });
+    socket.on("vote:pool:add", async (data) => {
+        const { GroupId, selectedOption, time, PollID } = data;
+        console.log(data);
+        io.to(GroupId).emit("vote:pool:Update", data);
+    });
 
     // Handle disconnecting from the socket
     socket.on("disconnect", () => {
         socket.leave(name);
     });
-    
 };
 
 module.exports = { handelRequest };

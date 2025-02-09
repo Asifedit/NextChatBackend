@@ -20,16 +20,4 @@ const msgSchema = new Schema({
     },
     
 },{timestamps:true});
-msgSchema.virtual("Time").get(function () {
-    return this.createdAt;
-});
-
-msgSchema.set("toJSON", {
-    virtuals: true,
-});
-
-msgSchema.set("toObject", {
-    virtuals: true,
-}); 
-
 module.exports = mongoose.model("Message", msgSchema);

@@ -6,17 +6,26 @@ const cookieparser = require("cookie-parser");
 const { handelRequest } = require("./Sockets/handelRequest");
 const router = require("./Router/Rought");
 const jwt = require("jsonwebtoken");
+const ImageKit = require("imagekit");
+const { instrument } = require("@socket.io/admin-ui");
+const Redis = require("ioredis");
 require("dotenv").config();
-const ejs = require("ejs");
-const path = require("path");
+
 const PORT = process.env.PORT || 5000;
 const app = express();
-const { instrument } = require("@socket.io/admin-ui");
+
 const corsOptions = {
     origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST"],
 };
+
+const imagekit = new ImageKit({
+    publicKey: process.env.ik_publicKey,
+    privateKey: process.env.ik_privateKey,
+    urlEndpoint: process.env.ik_urlEndpoint,
+});
+
 app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -25,6 +34,9 @@ app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 
+// const redis = new Redis(process.env.UPSTASH_REDIS_Url);
+
+
 const io = require("socket.io")(server, {
     transports: ["websocket", "polling"],
     cors: true,
@@ -32,16 +44,15 @@ const io = require("socket.io")(server, {
 
 instrument(io, {
     namespaceName: "/custom/username=asif",
-    auth: false, 
+    auth: false,
 });
 
-mongoose
-    .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.log(err));
+app.use(async (req, res, next) => {
+    req.io = io;
+    // req.redisClient = await redis;
+    next();
+});
+app.use("/req", router);
 
 io.use((socket, next) => {
     const token = socket.request.headers.cookie
@@ -60,13 +71,22 @@ io.use((socket, next) => {
     next();
 });
 
+
+mongoose
+    .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.log(err));
+
 io.on("connection", (socket) => handelRequest(socket, io));
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
-app.use("/req", router); 
+
+
+
+
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+  

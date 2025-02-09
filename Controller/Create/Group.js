@@ -24,26 +24,23 @@ const CreateGroup = async (req, res) => {
 
 const CreatePool = async (req, res) => {
     const { topic, options, explanation, groupname } = req.body;
-    console.log(options);
+    console.log(req.body);
 
     if (!topic || !options || !groupname) {
         res.status(400).json({ message: "Missing required fields" });
         return;
     }
-    let option = [];
-    options.map((item) => {
-        option.push({ [item]: 0 });
-    });
+    
     const newPool = new CreatePoolModel({
         GroupId: groupname,
         Question: topic,
-        Options: option,
+        Options: options,
         Explanation: explanation || null,
         CreatedBy: req.username,
     });
 
     await newPool.save();
-
+req.io.to(groupname).emit("Created:Pool", newPool);
     res.status(200).json({ newPool, message: "Pool Created" });
 };
 
