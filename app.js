@@ -6,9 +6,8 @@ const cookieparser = require("cookie-parser");
 const { handelRequest } = require("./Sockets/handelRequest");
 const router = require("./Router/Rought");
 const jwt = require("jsonwebtoken");
-const ImageKit = require("imagekit");
 const { instrument } = require("@socket.io/admin-ui");
-const Redis = require("ioredis");
+const { redis } = require("./Middleware/redis");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
@@ -20,12 +19,6 @@ const corsOptions = {
     methods: ["GET", "POST"],
 };
 
-const imagekit = new ImageKit({
-    publicKey: process.env.ik_publicKey,
-    privateKey: process.env.ik_privateKey,
-    urlEndpoint: process.env.ik_urlEndpoint,
-});
-
 app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -33,9 +26,6 @@ app.use(cookieparser());
 app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
-
-// const redis = new Redis(process.env.UPSTASH_REDIS_Url);
-
 
 const io = require("socket.io")(server, {
     transports: ["websocket", "polling"],
@@ -49,9 +39,9 @@ instrument(io, {
 
 app.use(async (req, res, next) => {
     req.io = io;
-    // req.redisClient = await redis;
     next();
 });
+
 app.use("/req", router);
 
 io.use((socket, next) => {
@@ -71,7 +61,6 @@ io.use((socket, next) => {
     next();
 });
 
-
 mongoose
     .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {
         useNewUrlParser: true,
@@ -82,11 +71,6 @@ mongoose
 
 io.on("connection", (socket) => handelRequest(socket, io));
 
-
-
-
-
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-  

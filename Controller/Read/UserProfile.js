@@ -3,6 +3,7 @@ const User = require("../../model/user_model");
 const userprofile = async (req, res) => {    
     const limit = process.env.SerchFrofileDAtaLimit || 2;
     const { username, page } = req.body;
+    
     if (!username || page == undefined) {
         return res.status(400).json({ message: "Unexpacted Error" });
     }
@@ -13,6 +14,7 @@ const userprofile = async (req, res) => {
                     username: username,
                 },
             },
+            
             {
                 $lookup: {
                     foreignField: "Fllower",
@@ -43,7 +45,7 @@ const userprofile = async (req, res) => {
                 },
             },
         ]);
-        const UserPost = await Contain.find({ CreatBy: req.username })
+        const UserPost = await Contain.find({ CreatBy: username })
             .select(["-__v"])
             .limit(limit);
 

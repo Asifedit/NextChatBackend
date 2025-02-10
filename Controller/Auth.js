@@ -6,8 +6,7 @@ const { authenticator } = require("otplib");
 const TempToken = require("../model/tempToken");
 const verifyEmail = require("../utils/ValidetEmail");
 const SenEmail = require("../utils/Nodemaler");
-let UserTempDb = {};
-
+const {SetValue,GrtValue} = require("../Middleware/redis")
 const Option = {
     httpOnly: true,
     secure: true,
@@ -237,7 +236,7 @@ const logout = (req, res) => {
 
 const SetUp2fa = async (req, res) => {
     const secret = authenticator.generateSecret();
-    UserTempDb[req.username.toString()] = secret;
+    SetValue(`${req.username.toString()}:2fa:secret`, secret,60*60*5);
     const otpauthUrl = `otpauth://totp/Asif:${req.username}?secret=${secret}&issuer=Asif1`;
     const qrOptions = {
         errorCorrectionLevel: "H",
@@ -259,7 +258,7 @@ const SetUp2fa = async (req, res) => {
 
 const Verifi2fa = async (req, res) => {
     const { code, OprationType } = req.body;
-    const userSecret = UserTempDb[req.username];
+    const userSecret = await GrtValue(`${req.username}:2fa:secret`) 
     if (OprationType === "Disable") {
         try {
             const userconfig = await Userconfig.findOne({
