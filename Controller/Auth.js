@@ -6,7 +6,7 @@ const { authenticator } = require("otplib");
 const TempToken = require("../model/tempToken");
 const verifyEmail = require("../utils/ValidetEmail");
 const SenEmail = require("../utils/Nodemaler");
-const {SetValue,GrtValue} = require("../Middleware/redis")
+const { SetValue, GrtValue, Deletvalue } = require("../Middleware/redis");
 const Option = {
     httpOnly: true,
     secure: true,
@@ -14,7 +14,8 @@ const Option = {
 };
 
 function CreateToken(length = 6) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    // const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const characters = "0123456789";
     let token = "";
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length);
@@ -54,11 +55,11 @@ const Resistor = async (req, res) => {
         });
     }
 
-    const chackemail = await verifyEmail(email);
+    // const chackemail = await verifyEmail(email);
 
-    if (!chackemail.valid) {
-        return res.status(400).json({ message: chackemail.message });
-    }
+    // if (!chackemail.valid) {
+    //     return res.status(400).json({ message: chackemail.message });
+    // }
 
     try {
         const userExists = await User.findOne({ username });
@@ -67,31 +68,22 @@ const Resistor = async (req, res) => {
         }
 
         const OTP = await CreateToken();
-        const token = await TempToken.findOneAndUpdate(
-            { username: username },
-            {
-                $set: {
-                    username: username,
-                    token: OTP,
-                },
-            },
-            {
-                upsert: true,
-                new: true,
-            }
+        await SetValue(
+            `Verification:OTP:${username}`,
+            OTP,
+            60 * 60 * 5
         );
-        console.log(OTP);
 
-        const mailResponce = await SenEmail("verification", email, {
-            name: username,
-            verificationCode: token.token,
-        });
-        if (!mailResponce.success) {
-            return res.status(200).json({ messages: "error to send code" });
-        }
+        // const mailResponce = await SenEmail("verification", email, {
+        //     name: username,
+        //     verificationCode: OTP,
+        // });
+        // if (!mailResponce.success) {
+        //     return res.status(200).json({ messages: "error to send code" });
+        // }
 
         const VerificationToken = jwt.sign(
-            { username, password, email, token: token.token },
+            { username, password, email, token: OTP },
             process.env.jwt_VerificationToken,
             { expiresIn: process.env.jwt_VerificationToken_Expair }
         );
@@ -100,7 +92,6 @@ const Resistor = async (req, res) => {
             .status(201)
             .cookie("VerificationToken", VerificationToken, Option)
             .json({ message: "User created successfully" });
-        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Something went wrong" });
@@ -108,11 +99,12 @@ const Resistor = async (req, res) => {
 };
 
 const VerifiResistor = async (req, res) => {
+    const {code} = req.body
     const VerificationToken =
         req.cookies.VerificationToken || req.body.VerificationToken;
 
     if (!VerificationToken)
-        return res.status(300).json({ messages: "Not Poperly Resistor" });
+        return res.status(300).json({ messages: "Somthing Wrong  Resistor Again" });
 
     const verifi = jwt.verify(
         VerificationToken,
@@ -123,6 +115,13 @@ const VerifiResistor = async (req, res) => {
         return res.status(400).json({ message: "Invalid Token" });
     }
     const { username, password, email, token } = verifi;
+
+    const DbCode = await GrtValue(`Verification:OTP:${username}`);
+    if (DbCode != code) {
+        return res.status(400).json({ message: "Code Not Match" });
+    }
+    await Deletvalue(`Verification:OTP:${username}`);
+    
     if (!username || !password || !email || !token) {
         return res.status(404).json({ message: "Modification Not Allow !" });
     }

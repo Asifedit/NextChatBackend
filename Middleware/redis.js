@@ -3,7 +3,7 @@ const redis = new Redis(process.env.REDIS_URL,);
 
 redis.on("connect", () => {
     console.log(
-        "Connected to Upstash Redis As:",
+        "Connected  Redis As:",
         redis.options.role,
         ", On port :",
         redis.options.port
@@ -33,5 +33,24 @@ const SetValue = async (key, value, expireSeconds = 60 * 60 * 12) => {
     }
 };
 
+const Deletvalue = async (key) => {
+    try {
+        const response = await redis.del(key);
+        return response;
+    } catch (error) {
+        console.error("Error deleting value in Redis:", error);
+        throw new Error("Failed to delete value in Redis");
+    }
+}
 
-module.exports = {redis, GrtValue, SetValue };
+const Incriment = async (key) => {
+    try {
+        const response = await redis.incr(key);
+        return response;
+    } catch (error) {
+        console.error("Error Incriment value in Redis:", error);
+    }
+}
+
+
+module.exports = { redis, GrtValue, SetValue, Deletvalue };

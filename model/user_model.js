@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const bcrypt = require("bcrypt");
+const { GrtValue, SetValue } = require("../Middleware/redis")
+const {getTempUrlWithSignature} =require("../Middleware/imagekit")
 const UserSchema = new Schema(
     {
         username: {
@@ -44,6 +46,7 @@ const UserSchema = new Schema(
     },
     { timestamps: true }
 );
+
 UserSchema.pre("save", async function (next) {
     const USER = this;
     if (!USER.isModified("password")) {
@@ -57,13 +60,13 @@ UserSchema.pre("save", async function (next) {
         next(error);
     }
 });
+
 UserSchema.methods.isPasswordVerified = async function (inputvalue) {
     try {
-        return await bcrypt.compare(inputvalue, this.password); 
+        return await bcrypt.compare(inputvalue, this.password);
     } catch (error) {
         console.log(error);
-        return false; 
+        return false;
     }
 };
-
 module.exports = mongoose.model("User", UserSchema);

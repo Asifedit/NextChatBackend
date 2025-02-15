@@ -7,7 +7,7 @@ const { handelRequest } = require("./Sockets/handelRequest");
 const router = require("./Router/Rought");
 const jwt = require("jsonwebtoken");
 const { instrument } = require("@socket.io/admin-ui");
-const { redis } = require("./Middleware/redis");
+const { redis } = require("./Middleware/redis"); 
 require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
@@ -45,20 +45,24 @@ app.use(async (req, res, next) => {
 app.use("/req", router);
 
 io.use((socket, next) => {
-    const token = socket.request.headers.cookie
-        ?.split("; ")
-        .find((c) => c.startsWith("AccessToken="))
-        ?.split("=")[1];
+    try {
+        const token = socket.request.headers.cookie
+            ?.split("; ")
+            .find((c) => c.startsWith("AccessToken="))
+            ?.split("=")[1];
 
-    if (!token) {
-        return next(new Error("Authentication error: No token provided"));
+        if (!token) {
+            return next(new Error("Authentication error: No token provided"));
+        }
+        socket.username = jwt.verify(
+            token,
+            process.env.jwt_AcessToken_Secret
+        ).username;
+
+        next();
+    } catch (error) {
+        console.error(error);
     }
-    socket.username = jwt.verify(
-        token,
-        process.env.jwt_AcessToken_Secret
-    ).username;
-
-    next();
 });
 
 mongoose
@@ -70,6 +74,10 @@ mongoose
     .catch((err) => console.log(err));
 
 io.on("connection", (socket) => handelRequest(socket, io));
+
+
+
+
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

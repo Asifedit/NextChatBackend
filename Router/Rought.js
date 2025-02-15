@@ -4,14 +4,14 @@ const Newlogin = require("../Controller/NewLogin");
 const { UpdateProfile, profileimageUpload } = require("../Controller/profile");
 const { Like, comment, GetComment } = require("../Controller/PostAction");
 const { CreateGroup, CreatePool } = require("../Controller/Create/Group");
+const explore = require("../Controller/Explore")
+const myprofile =require("../Controller/Settings")
 const {
-    explore,
     follow,
     Contacets,
     HandelFile,
     HandelText,
     FindUser,
-    myprofile,
 } = require("../Controller/requses");
 
 const {
@@ -71,5 +71,7 @@ router.post("/create/pool", Verify, CreatePool);
 router.post("/upload/file", Verify, upload.single("Data"), HandelFile);
 router.post("/updateprofile", Verify, upload.single("file"), UpdateProfile);
 router.post("/report", Verify, upload.single("File"), report);
+
+
 
 module.exports = router;

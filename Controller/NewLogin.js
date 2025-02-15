@@ -120,17 +120,23 @@ const Newlogin = async (req, res) => {
             },
         ]);
         // req.io.to(username).emit("receiveMessage",AllMessage);
-        const data = {
-            contacet: [allJoindedGroup[0], Allcontacet[0]],
-                message: AllMessage[0]
-        }
-        console.log(data);
 
-        req.io.to(username).emit("Old:Data:All", data);
-        res.status(200).json({message:"all data sended"});
+        const data = {
+            contacet: [],
+        };
+        if (Allcontacet[0]) {
+            data.contacet.push(Allcontacet[0]);
+        }
+        if (allJoindedGroup[0]) {
+            data.contacet.push(allJoindedGroup[0]);
+        }
+        if (AllMessage[0]) {
+            data.message = AllMessage[0];
+        }
+        res.status(200).json(data);
     } catch (error) {
         console.error(error);
     }
-}; 
+};
 
 module.exports = Newlogin;

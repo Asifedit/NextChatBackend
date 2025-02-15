@@ -19,6 +19,9 @@ const Like = async (req, res) => {
             }
         );
         console.log(newLike);
+        if (newLike.likeUserid) {
+            return res.status(400).json({ message: "Alrady Like" });
+        }
 
         res.status(200).json({
             message: "Post liked successfully",
