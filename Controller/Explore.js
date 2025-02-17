@@ -5,27 +5,17 @@ const Contain = require("../model/Contain_model");
 const explore = async (req, res) => {
     const { flag } = req.body;
     console.log(flag);
-    
-    const currentUserId = req.username;
-
+    const limit = 2; 
     const ContacetData = async () => {
-        if (flag === 0) {
             try {
-                const alreadyFollowing = await Contact.find({
-                    FllowBy: currentUserId,
-                }).select("Fllower");
-                const followingIds = alreadyFollowing.map(
-                    (follow) => follow.Fllower
-                );
-                const suggestedUsers = await User.find({
-                    username: { $nin: [...followingIds, currentUserId] },
-                })
+                const suggestedUsers = await User.find()
                     .select(["username", "profile", "ProfileUrl"])
-                    .limit(10)
-                    .skip(flag * 10);
-                if (suggestedUsers.length == 0) {
-                    return false;
-                }
+                    .skip(5 * flag - 5)
+                    .limit(5);
+                    
+                console.log(suggestedUsers);
+                
+
                 return [suggestedUsers, { DataType: "contacet" }];
             } catch (error) {
                 console.error("Error fetching users:", error);
@@ -34,15 +24,18 @@ const explore = async (req, res) => {
                     error: error.message,
                 });
             }
-        }
     };
 
     const data = async () => {
         try {
-            // const data = await Contain.find().select("-__v").limit(5).lean();
+            console.log(limit * flag - limit);
+            
             const data = await Contain.aggregate([
                 {
-                    $limit: 1,
+                    $skip: limit *flag -limit,
+                },
+                {
+                    $limit: limit,
                 },
                 {
                     $addFields: {
@@ -83,6 +76,7 @@ const explore = async (req, res) => {
                     },
                 },
             ]);
+            
 
             if (!data) {
                 return false;
@@ -93,6 +87,7 @@ const explore = async (req, res) => {
 
     const DATA = await data();
     const Cont = await ContacetData();
+    
     const final = () => {
         const Array = [DATA, Cont];
         if (!Cont) {
@@ -102,6 +97,7 @@ const explore = async (req, res) => {
         }
         return Array;
     };
+    console.log(final());
     res.status(200).json(final());
 };
 
