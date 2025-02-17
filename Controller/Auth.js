@@ -55,11 +55,11 @@ const Resistor = async (req, res) => {
         });
     }
 
-    // const chackemail = await verifyEmail(email);
+    const chackemail = await verifyEmail(email);
 
-    // if (!chackemail.valid) {
-    //     return res.status(400).json({ message: chackemail.message });
-    // }
+    if (!chackemail.valid) {
+        return res.status(400).json({ message: chackemail.message });
+    }
 
     try {
         const userExists = await User.findOne({ username });
@@ -74,13 +74,13 @@ const Resistor = async (req, res) => {
             60 * 60 * 5
         );
 
-        // const mailResponce = await SenEmail("verification", email, {
-        //     name: username,
-        //     verificationCode: OTP,
-        // });
-        // if (!mailResponce.success) {
-        //     return res.status(200).json({ messages: "error to send code" });
-        // }
+        const mailResponce = await SenEmail("verification", email, {
+            name: username,
+            verificationCode: OTP,
+        });
+        if (!mailResponce.success) {
+            return res.status(200).json({ messages: "error to send code" });
+        }
 
         const VerificationToken = jwt.sign(
             { username, password, email, token: OTP },
