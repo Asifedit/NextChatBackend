@@ -1,15 +1,16 @@
 const express = require("express");
 const http = require("http");
+const jwt = require("jsonwebtoken");
+const { instrument } = require("@socket.io/admin-ui");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieparser = require("cookie-parser");
-const { handelRequest } = require("./Sockets/handelRequest");
-const router = require("./Router/Rought");
-const jwt = require("jsonwebtoken");
-const { instrument } = require("@socket.io/admin-ui");
-const { redis } = require("./Middleware/redis"); 
-require("dotenv").config();
 
+const router = require("./Router/Rought");
+const { redis } = require("./Middleware/redis"); 
+const { handelRequest } = require("./Sockets/handelRequest");
+
+require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 
@@ -25,8 +26,8 @@ app.use(express.json());
 app.use(cookieparser());
 app.use(express.urlencoded({ extended: true }));
 
-const server = http.createServer(app);
 
+const server = http.createServer(app);
 const io = require("socket.io")(server, {
     transports: ["websocket", "polling"],
     cors: true,
@@ -74,9 +75,6 @@ mongoose
     .catch((err) => console.log(err));
 
 io.on("connection", (socket) => handelRequest(socket, io));
-
-
-
 
 
 server.listen(PORT, () => {

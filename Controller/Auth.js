@@ -7,15 +7,15 @@ const TempToken = require("../model/tempToken");
 const verifyEmail = require("../utils/ValidetEmail");
 const SenEmail = require("../utils/Nodemaler");
 const { SetValue, GrtValue, Deletvalue } = require("../Middleware/redis");
+
 const Option = {
     httpOnly: true,
     secure: true,
-    sameSite: "None",
+    sameSite: "Strict",
 };
 
 function CreateToken(length = 6) {
-    // const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const characters = "0123456789";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let token = "";
     for (let i = 0; i < length; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length);
@@ -37,7 +37,7 @@ const Resistor = async (req, res) => {
     const emailREGEX = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
     const PasswordREGEX =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#])[A-Za-z\d@$!%*?&^#]{8,}$/;
-    
+
     if (!usernameREGEX.test(username)) {
         return res.status(400).json({
             message:
@@ -68,11 +68,7 @@ const Resistor = async (req, res) => {
         }
 
         const OTP = await CreateToken();
-        await SetValue(
-            `Verification:OTP:${username}`,
-            OTP,
-            60 * 60 * 5
-        );
+        await SetValue(`Verification:OTP:${username}`, OTP, 60 * 60 * 5);
 
         const mailResponce = await SenEmail("verification", email, {
             name: username,
@@ -99,12 +95,14 @@ const Resistor = async (req, res) => {
 };
 
 const VerifiResistor = async (req, res) => {
-    const {code} = req.body
+    const { code } = req.body;
     const VerificationToken =
         req.cookies.VerificationToken || req.body.VerificationToken;
 
     if (!VerificationToken)
-        return res.status(300).json({ messages: "Somthing Wrong  Resistor Again" });
+        return res
+            .status(300)
+            .json({ messages: "Somthing Wrong  Resistor Again" });
 
     const verifi = jwt.verify(
         VerificationToken,
@@ -121,7 +119,7 @@ const VerifiResistor = async (req, res) => {
         return res.status(400).json({ message: "Code Not Match" });
     }
     await Deletvalue(`Verification:OTP:${username}`);
-    
+
     if (!username || !password || !email || !token) {
         return res.status(404).json({ message: "Modification Not Allow !" });
     }
@@ -170,6 +168,8 @@ const VerifiResistor = async (req, res) => {
 
 const Login = async (req, res) => {
     const { username, password } = req.body || req.headers;
+    console.log(password);
+    
 
     try {
         if (!username || !password) {
@@ -235,7 +235,7 @@ const logout = (req, res) => {
 
 const SetUp2fa = async (req, res) => {
     const secret = authenticator.generateSecret();
-    SetValue(`${req.username.toString()}:2fa:secret`, secret,60*60*5);
+    SetValue(`${req.username.toString()}:2fa:secret`, secret, 60 * 60 * 5);
     const otpauthUrl = `otpauth://totp/Asif:${req.username}?secret=${secret}&issuer=Asif1`;
     const qrOptions = {
         errorCorrectionLevel: "H",
@@ -257,7 +257,7 @@ const SetUp2fa = async (req, res) => {
 
 const Verifi2fa = async (req, res) => {
     const { code, OprationType } = req.body;
-    const userSecret = await GrtValue(`${req.username}:2fa:secret`) 
+    const userSecret = await GrtValue(`${req.username}:2fa:secret`);
     if (OprationType === "Disable") {
         try {
             const userconfig = await Userconfig.findOne({

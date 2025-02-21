@@ -1,5 +1,5 @@
 const Redis = require("ioredis");
-const redis = new Redis(process.env.REDIS_URL,);
+const redis = new Redis(process.env.REDIS_URL);
 
 redis.on("connect", () => {
     console.log(
@@ -41,7 +41,7 @@ const Deletvalue = async (key) => {
         console.error("Error deleting value in Redis:", error);
         throw new Error("Failed to delete value in Redis");
     }
-}
+};
 
 const Incriment = async (key) => {
     try {
@@ -50,7 +50,38 @@ const Incriment = async (key) => {
     } catch (error) {
         console.error("Error Incriment value in Redis:", error);
     }
-}
+};
 
+const rateLimitation = async (bucketName, limit, expiration) => {
+    const key = `bucket:${bucketName}`;
 
-module.exports = { redis, GrtValue, SetValue, Deletvalue };
+    try {
+        const exists = await redis.exists(key);
+
+        if (!exists) {
+            await redis.set(key, limit, "EX", expiration);
+            return { decision: true, remaining: limit };
+        }
+
+        const remaining = await redis.multi().decr(key).get(key).exec();
+
+        if (remaining && remaining[0][1] >= 0) {
+            return { decision: true, remaining: remaining[0][1] };
+        } else {
+            await redis.set(key, 0);
+            return { decision: false, remaining: 0 };
+        }
+    } catch (error) {
+        console.error("Redis error:", error);
+        return { decision: true, remaining: limit };
+    }
+};
+
+module.exports = {
+    redis,
+    GrtValue,
+    SetValue,
+    Deletvalue,
+    rateLimitation,
+    Incriment,
+};

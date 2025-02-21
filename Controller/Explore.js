@@ -3,45 +3,48 @@ const Contact = require("../model/Fllow_model");
 const Contain = require("../model/Contain_model");
 
 const explore = async (req, res) => {
-    const { flag } = req.body;
-    console.log(flag);
-    const limit = 2; 
-    const ContacetData = async () => {
-            try {
-                const suggestedUsers = await User.find()
-                    .select(["username", "profile", "ProfileUrl"])
-                    .skip(5 * flag - 5)
-                    .limit(5);
-                    
-                console.log(suggestedUsers);
-                
+    const { LastPostTime, FirstPostTime, flag } = req.body; // Use timestamps for cursor-based pagination
+    const limit = 10; // Number of posts to fetch per request
+    console.log(LastPostTime, FirstPostTime);
 
-                return [suggestedUsers, { DataType: "contacet" }];
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                res.status(500).json({
-                    message: "Internal server error",
-                    error: error.message,
-                });
-            }
+    // Fetch suggested users
+    const ContacetData = async () => {
+        try {
+            const suggestedUsers = await User.find()
+                .select(["username", "profile", "ProfileUrl"])
+                .skip(flag * limit - limit)
+                .limit(limit); // Fetch the latest 5 users
+            return [suggestedUsers, { DataType: "contacet" }];
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            throw error; // Propagate the error to be handled in the main function
+        }
     };
 
+    // Fetch posts based on timestamps
     const data = async () => {
         try {
-            console.log(limit * flag - limit);
-            
+            let matchQuery = {};
+
+            if (FirstPostTime && LastPostTime) {
+                // Exclude posts created between FirstPostTime and LastPostTime
+                matchQuery.$or = [
+                    { createdAt: { $lt: new Date(LastPostTime) } },
+                    { createdAt: { $gt: new Date(FirstPostTime) } },
+                ];
+            } else if (FirstPostTime) {
+                matchQuery.createdAt = { $gt: new Date(FirstPostTime) };
+            } else if (LastPostTime) {
+                matchQuery.createdAt = { $lt: new Date(LastPostTime) };
+            }
+
             const data = await Contain.aggregate([
-                {
-                    $skip: limit *flag -limit,
-                },
-                {
-                    $limit: limit,
-                },
-                {
-                    $addFields: {
-                        postIdAsString: { $toString: "$_id" },
-                    },
-                },
+                { $match: matchQuery },
+                { $sort: { createdAt: -1 } },
+                { $limit: limit },
+
+                { $addFields: { postIdAsString: { $toString: "$_id" } } },
+
                 {
                     $lookup: {
                         from: "likes",
@@ -50,11 +53,10 @@ const explore = async (req, res) => {
                         as: "totallike",
                     },
                 },
+
                 {
                     $addFields: {
-                        TotalLike: {
-                            $size: { $ifNull: ["$totallike", []] },
-                        },
+                        TotalLike: { $size: { $ifNull: ["$totallike", []] } },
                         IsLike: {
                             $cond: {
                                 if: {
@@ -69,36 +71,36 @@ const explore = async (req, res) => {
                         },
                     },
                 },
-                {
-                    $project: {
-                        __v: 0,
-                        totallike: 0,
-                    },
-                },
+
+                { $project: { __v: 0, totallike: 0 } },
             ]);
-            
 
-            if (!data) {
-                return false;
-            }
-            return [data, { DataType: "contain" }];
-        } catch (error) {}
-    };
-
-    const DATA = await data();
-    const Cont = await ContacetData();
-    
-    const final = () => {
-        const Array = [DATA, Cont];
-        if (!Cont) {
-            Array.pop(Cont);
-        } else if (!DATA) {
-            Array.pop(DATA);
+            return data.length ? [data, { DataType: "contain" }] : false;
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+            throw error;
         }
-        return Array;
     };
-    console.log(final());
-    res.status(200).json(final());
+
+    try {
+        const DATA = await data();
+        const Cont = await ContacetData();
+
+        const final = () => {
+            const result = [];
+            if (DATA) result.push(DATA);
+            if (Cont) result.push(Cont);
+            return result;
+        };
+
+        res.status(200).json(final());
+    } catch (error) {
+        console.error("Error in explore function:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
 };
 
 module.exports = explore;
