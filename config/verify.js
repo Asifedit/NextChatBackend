@@ -3,6 +3,7 @@ const User = require("../model/user_model");
 const Option = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
 };
 const Verify = async (req, res, next) => {
     const Token = req.cookies.AccessToken;
