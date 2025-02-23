@@ -216,7 +216,12 @@ const Login = async (req, res) => {
             .status(200)
             .cookie("AccessToken", accessToken, Option)
             .cookie("RefreshToken", refreshToken, Option)
-            .json({ message: "User logged in successfully" });
+            .json({
+                message: "User logged in successfully",
+                accessToken,
+                refreshToken,
+            });
+        
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Something went wrong" });

@@ -6,8 +6,6 @@ const Option = {
 };
 const Verify = async (req, res, next) => {
     const Token = req.cookies.AccessToken;
-    console.log(req.cookies);
-    
     if (!Token) {
         return res
             .status(302)
