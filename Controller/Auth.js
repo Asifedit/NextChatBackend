@@ -11,7 +11,6 @@ const { SetValue, GrtValue, Deletvalue } = require("../Middleware/redis");
 const Option = {
     httpOnly: true,
     secure: true,
-    sameSite: "Strict",
 };
 
 function CreateToken(length = 6) {
