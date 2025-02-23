@@ -3,7 +3,6 @@ const rateLimiter = async (req, res, next) => {
     const username = req.username;
     const ip = req.ip.toString().replace(":","");
     const route = req.path.toString();
-console.log(ip)
    const bucketKey = `rate_limit:${username}:${ip}:${route}`;
     const hourlyKey = `rate_limit_hourly:${username}:${ip}:${route}`;
 

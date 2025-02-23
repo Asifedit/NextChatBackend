@@ -3,31 +3,45 @@ const Contact = require("../model/Fllow_model");
 const Contain = require("../model/Contain_model");
 
 const explore = async (req, res) => {
-    const { LastPostTime, FirstPostTime, flag } = req.body; // Use timestamps for cursor-based pagination
-    const limit = 10; // Number of posts to fetch per request
+    const { LastPostTime, FirstPostTime, flag } = req.body;
     console.log(LastPostTime, FirstPostTime);
 
-    // Fetch suggested users
+    const limit = 10; 
     const ContacetData = async () => {
+        if (LastPostTime || FirstPostTime) {
+            return;
+        }
         try {
-            const suggestedUsers = await User.find()
-                .select(["username", "profile", "ProfileUrl"])
-                .skip(flag * limit - limit)
-                .limit(limit); // Fetch the latest 5 users
+            const AllUesr = [req.username];
+            const AlradyFllow = await Contact.find({ FllowBy: req.username });
+
+            AlradyFllow.map((item) => {
+                AllUesr.push(item.Fllower);
+            });
+
+            const suggestedUsers = await User.aggregate([
+                {
+                    $match: {
+                        username: { $nin: AllUesr },
+                    },
+                },
+
+                {
+                    $limit: limit,
+                },
+            ]);
+
             return [suggestedUsers, { DataType: "contacet" }];
         } catch (error) {
             console.error("Error fetching users:", error);
-            throw error; // Propagate the error to be handled in the main function
+            throw error;
         }
     };
 
-    // Fetch posts based on timestamps
     const data = async () => {
         try {
             let matchQuery = {};
-
             if (FirstPostTime && LastPostTime) {
-                // Exclude posts created between FirstPostTime and LastPostTime
                 matchQuery.$or = [
                     { createdAt: { $lt: new Date(LastPostTime) } },
                     { createdAt: { $gt: new Date(FirstPostTime) } },
@@ -37,14 +51,11 @@ const explore = async (req, res) => {
             } else if (LastPostTime) {
                 matchQuery.createdAt = { $lt: new Date(LastPostTime) };
             }
-
             const data = await Contain.aggregate([
                 { $match: matchQuery },
                 { $sort: { createdAt: -1 } },
                 { $limit: limit },
-
                 { $addFields: { postIdAsString: { $toString: "$_id" } } },
-
                 {
                     $lookup: {
                         from: "likes",
@@ -53,7 +64,6 @@ const explore = async (req, res) => {
                         as: "totallike",
                     },
                 },
-
                 {
                     $addFields: {
                         TotalLike: { $size: { $ifNull: ["$totallike", []] } },
@@ -71,10 +81,8 @@ const explore = async (req, res) => {
                         },
                     },
                 },
-
                 { $project: { __v: 0, totallike: 0 } },
             ]);
-
             return data.length ? [data, { DataType: "contain" }] : false;
         } catch (error) {
             console.error("Error fetching posts:", error);

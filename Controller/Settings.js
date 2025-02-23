@@ -95,8 +95,8 @@ const myprofile = async (req, res) => {
                 },
             },
         },
-    ]);
-    res.status(200).json({ data: user });
+    ]);    
+    res.status(200).json({ data: user[0] });
 };
 
 module.exports = myprofile;

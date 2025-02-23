@@ -169,7 +169,6 @@ const VerifiResistor = async (req, res) => {
 const Login = async (req, res) => {
     const { username, password } = req.body || req.headers;
     console.log(password);
-    
 
     try {
         if (!username || !password) {
@@ -235,7 +234,7 @@ const logout = (req, res) => {
 
 const SetUp2fa = async (req, res) => {
     const secret = authenticator.generateSecret();
-    SetValue(`${req.username.toString()}:2fa:secret`, secret, 60 * 60 * 5);
+    SetValue(`${req.username}:2fa:secret`, secret, 60 * 60 * 5);
     const otpauthUrl = `otpauth://totp/Asif:${req.username}?secret=${secret}&issuer=Asif1`;
     const qrOptions = {
         errorCorrectionLevel: "H",
@@ -258,47 +257,8 @@ const SetUp2fa = async (req, res) => {
 const Verifi2fa = async (req, res) => {
     const { code, OprationType } = req.body;
     const userSecret = await GrtValue(`${req.username}:2fa:secret`);
-    if (OprationType === "Disable") {
-        try {
-            const userconfig = await Userconfig.findOne({
-                username: req.username,
-            });
+    console.log(req.username);
 
-            if (!userconfig) {
-                return res
-                    .status(404)
-                    .json({ message: "User configuration not found." });
-            }
-            const isValid = authenticator.verify({
-                token: code,
-                secret: userconfig.TwoFa_App_Token,
-            });
-            if (isValid) {
-                const daat = await Userconfig.updateOne(
-                    { username: req.username },
-                    {
-                        $unset: {
-                            TwoFa_App_Token: 1,
-                        },
-                    }
-                );
-                return res.status(200).json({
-                    message: "App authenticator disabled successfully.",
-                });
-            } else {
-                return res
-                    .status(400)
-                    .json({ message: "Invalid TwoFactor code." });
-            }
-        } catch (error) {
-            console.error(error);
-
-            return res.status(500).json({
-                message:
-                    "An error occurred while disabling Two-Factor Authentication.",
-            });
-        }
-    }
     try {
         if (!userSecret) {
             return res
@@ -347,44 +307,57 @@ const Verifi2fa = async (req, res) => {
     }
 };
 
+const Disable2fa = async (req, res) => {
+    const { code } = req.body;
+
+    try {
+        const userconfig = await Userconfig.findOne({
+            username: req.username,
+        });
+
+        if (!userconfig.TwoFa_App_Token) {
+            return res
+                .status(404)
+                .json({ message: "User configuration not found." });
+        }
+        console.log(userconfig);
+
+        const isValid = authenticator.verify({
+            token: code,
+            secret: userconfig.TwoFa_App_Token,
+        });
+        console.log(isValid);
+
+        if (isValid) {
+            await Userconfig.updateOne(
+                { username: req.username },
+                {
+                    $unset: {
+                        TwoFa_App_Token: 1,
+                    },
+                }
+            );
+            return res.status(200).json({
+                message: "App authenticator disabled successfully.",
+            });
+        } else {
+            return res.status(400).json({ message: "Invalid TwoFactor code." });
+        }
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message:
+                "An error occurred while disabling Two-Factor Authentication.",
+        });
+    }
+};
+
 const PinOpration = async (req, res) => {
     const { pin, OldPIN, Type } = req.body;
     if (!pin) {
         return res.status(400).json({ message: "PIN is Require" });
     }
-    if (Type == "Disable PIN") {
-        try {
-            const userConfig = await Userconfig.findOne({
-                username: req.username,
-            });
-            if (!userConfig || !userConfig.Two_Step_Verification_Coad) {
-                return res.status(404).json({
-                    message: "PIN is not enabled or already disabled.",
-                });
-            }
-            if (pin != userConfig.Two_Step_Verification_Coad) {
-                return res.status(400).json({ message: "PIN Not Match." });
-            }
-            const UserConfiguration = await Userconfig.updateOne(
-                { username: req.username },
-                { $unset: { Two_Step_Verification_Coad: "" } }
-            );
-            if (UserConfiguration.acknowledged) {
-                return res
-                    .status(200)
-                    .json({ message: "PIN successfully disabled." });
-            }
-            return res
-                .status(400)
-                .json({ message: "Failed to disable PIN. Please try again." });
-        } catch (error) {
-            console.error("Error disabling PIN:", error);
-            return res.status(500).json({
-                message: "An error occurred while disabling the PIN.",
-            });
-        }
-    }
-
     if (OldPIN) {
         if (!OldPIN) {
             return res.status(400).json({ message: "OldPIN is Require" });
@@ -438,6 +411,44 @@ const PinOpration = async (req, res) => {
             console.error(error);
             res.status(500).json({ message: "Somthing Weong" });
         }
+    }
+};
+
+const DisablePin = async (req, res) => {
+    const { pin } = req.body;
+    if (!pin) {
+        return res.status(400).json({ message: "PIN is Require" });
+    }
+
+    try {
+        const userConfig = await Userconfig.findOne({
+            username: req.username,
+        });
+        if (!userConfig || !userConfig.Two_Step_Verification_Coad) {
+            return res.status(404).json({
+                message: "PIN is not enabled or already disabled.",
+            });
+        }
+        if (pin != userConfig.Two_Step_Verification_Coad) {
+            return res.status(400).json({ message: "PIN Not Match." });
+        }
+        const UserConfiguration = await Userconfig.updateOne(
+            { username: req.username },
+            { $unset: { Two_Step_Verification_Coad: "" } }
+        );
+        if (UserConfiguration.acknowledged) {
+            return res
+                .status(200)
+                .json({ message: "PIN successfully disabled." });
+        }
+        return res.status(400).json({
+            message: "Failed to disable PIN. Please try again.",
+        });
+    } catch (error) {
+        console.error("Error disabling PIN:", error);
+        return res.status(500).json({
+            message: "An error occurred while disabling the PIN.",
+        });
     }
 };
 
@@ -500,4 +511,7 @@ module.exports = {
     Verifi2fa,
     PinOpration,
     Verifi2faToken,
+    Disable2fa,
+    DisablePin,
 };
+ 
