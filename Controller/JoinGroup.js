@@ -1,0 +1,34 @@
+const MemberGroupmodel = require("../model/Group/GroupJoindedModel");
+const group = require("../model/Group/GroupModel");
+const JoinGroup = async (req, res) => {
+    const { groupname } = req.body;
+    
+    try {
+        const isExist = await group.findOne({ GroupName: groupname });
+        if (!isExist)
+            return res.status(404).json({ message: "Group not found" });
+        const isMember = await MemberGroupmodel.findOne({
+            GroupName: groupname,
+            Member: req.username,
+        });
+        if (isMember) return res
+                .status(400)
+                .json({ message: "You are already a member of this group" });
+        console.log(req.username);
+        
+        const newMember = new MemberGroupmodel({
+            GroupName: groupname,
+            Member: req.username,
+            Role: "Member",
+        });
+        console.log(newMember);
+        
+         await newMember.save();
+        req.io.to(req.username).emit("Contact:Add:Group", newMember);
+        res.status(200).json({ message: "Joined successfully" });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+module.exports = JoinGroup;

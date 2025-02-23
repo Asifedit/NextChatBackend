@@ -3,9 +3,12 @@ const User = require("../model/user_model");
 const Option = {
     httpOnly: true,
     secure: true,
+    sameSite: "None",
 };
 const Verify = async (req, res, next) => {
     const Token = req.cookies.AccessToken;
+    console.log(req.cookies);
+    
     if (!Token) {
         return res
             .status(302)
@@ -29,7 +32,7 @@ const Verify = async (req, res, next) => {
                 }).select(["refToken"]);
                 if (RefresToken !== getUser.refToken) {
                     return res
-                        .status(400)
+                        .status(300)
                         .json({ message: "Your login expair " });
                 }
                 const NewAccessToken = jwt.sign(
@@ -71,3 +74,4 @@ const Verify = async (req, res, next) => {
     }
 };
 module.exports = { Verify };
+ 

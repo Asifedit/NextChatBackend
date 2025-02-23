@@ -1,34 +1,46 @@
 const User = require("../model/user_model");
+const path = require("path")
+const fs = require("fs")
+const imageKit = require("../Middleware/imagekit")
 
 const UpdateProfile = async (req, res) => {
     const data = req.body;
-    if (!req.file) {
-        return res.status(400).send("No file uploaded.");
-    }
-    console.log("File uploaded:", req.file);
     try {
         const updateFields = {};
         if (data.bio) updateFields.bio = data.bio;
-        if (data.birthDate) updateFields.BirthDay = new Date(data.birthDate);
+        if (data.birthDate)
+            updateFields.BirthDay = data.birthDate;
         if (Array.isArray(data.favorites) && data.favorites.length > 0) {
             updateFields.userAbout = data.favorites.map((fav) => {
                 return {
                     Topic: fav.Topic || "",
-                    Data: fav.Data || "", 
+                    Data: fav.Data || "",
                 };
             });
         }
         if (req.file) {
             updateFields.profilePicture = `/uploads/${req.file.filename}`;
+            const UplodedFilePath = path.join(__dirname, `../Public/${req.file.filename}`);
+            const responce = imageKit.upload({
+                file: fs.createReadStream(UplodedFilePath),
+                fileName: req.file.filename,
+                isPrivateFile: true,
+                
+            });
+            console.log(responce);
+            
         }
+        console.log(updateFields);
+
         const updateQuery = {
             $set: updateFields,
         };
+
         const user = await User.findOneAndUpdate(
-            { username: req.username }, // Assumes req.username is set from the authenticated user
+            { username: req.username },
             updateQuery,
             {
-                new: true, // Return the updated document
+                new: true,
                 projection: {
                     password: 0,
                     phonenumber: 0,
@@ -40,6 +52,7 @@ const UpdateProfile = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+
         return res.status(200).json(user);
     } catch (error) {
         console.error(error);
