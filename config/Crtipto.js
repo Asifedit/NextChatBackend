@@ -34,7 +34,7 @@ function decryptData(req, res, next) {
         next();
     } catch (error) {
         console.log(error);
-        res.stutas(500).json({messages:"require value not found"})
+        res.status(500).json({ messages: "require value not found" });
         
     }
 }
