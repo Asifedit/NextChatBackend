@@ -1,6 +1,7 @@
 const MsgModel = require("../model/msg_model");
 const MesseageModel = require("../model/Group/Messeage");
 const OnConnection = require("./Event/OnConnection");
+const { Deletvalue, redis } = require("../Middleware/redis");
 const handelRequest = async (socket, io) => {
     let name = socket.username;
 
@@ -10,6 +11,7 @@ const handelRequest = async (socket, io) => {
         socket.disconnect();
         return;
     }
+    await redis.sadd("OnlineUserList", name);
 
     socket.on("start:call", async ({ username }) => {
         if (!io.sockets.adapter.rooms.has(username)) {
@@ -25,8 +27,6 @@ const handelRequest = async (socket, io) => {
 
     // Assuming you're using Socket.IO to emit and listen to events
     socket.on("offer", ({ offer, username }) => {
-        console.log("Received offer from:", username);
-
         // Check if the user is connected before forwarding the offer
         if (!io.sockets.adapter.rooms.has(username)) {
             socket.emit("Error", { message: "User Not Connected" });
@@ -38,24 +38,18 @@ const handelRequest = async (socket, io) => {
     });
 
     socket.on("answer", ({ answer, username }) => {
-        console.log("Sending answer to:", username);
         // Forward the answer to the appropriate user
         socket.to(username).emit("answer", { answer, username: name });
     });
 
     socket.on("candidate", ({ eventCandidate, username }) => {
-        console.log(
-            "Forwarding ICE candidate to:",
-            username,
-            "from",
-            socket.id
-        );
         // Forward the ICE candidate to the other user
         socket.to(username).emit("candidate", eventCandidate);
     });
 
     // Handling direct and group messages
     socket.on("Send", async (message, callback) => {
+
         const { text, for: target } = message;
         try {
             if (io.sockets.adapter.rooms.has(target)) {
@@ -68,15 +62,13 @@ const handelRequest = async (socket, io) => {
                 await newMessage.save();
 
                 const { For, Msg, createdAt, isSend, From } = newMessage;
-                socket
-                    .to(target)
-                    .emit("receiveMessage", {
-                        For,
-                        Msg,
-                        createdAt,
-                        isSend,
-                        From,
-                    });
+                socket.to(target).emit("receiveMessage", {
+                    For,
+                    Msg,
+                    createdAt,
+                    isSend,
+                    From,
+                });
                 callback(newMessage);
             } else {
                 const newMessage = new MsgModel({
@@ -88,15 +80,7 @@ const handelRequest = async (socket, io) => {
                 await newMessage.save();
                 const { For, Msg, createdAt, isSend, From } = newMessage;
 
-                socket
-                    .to(target)
-                    .emit("receiveMessage", {
-                        For,
-                        Msg,
-                        createdAt,
-                        isSend,
-                        From,
-                    }); // Send the message to the receiver
+                callback(newMessage);
             }
         } catch (error) {
             console.log("Error while sending message.", error);
@@ -115,8 +99,6 @@ const handelRequest = async (socket, io) => {
 
             if (oldMsg) {
                 socket.to(name).emit("receiveMessage", oldMsg); // Send updated message to the user
-            } else {
-                console.log("Message not found or already sent.");
             }
         } catch (error) {
             console.log("Error while unsending message.", error);
@@ -129,7 +111,6 @@ const handelRequest = async (socket, io) => {
 
         try {
             if (socket.rooms.has(groupname)) {
-                console.log(`You are already in the group "${groupname}".`);
                 return;
             }
 
@@ -154,23 +135,50 @@ const handelRequest = async (socket, io) => {
 
             socket.to(groupname).emit("Group:Msg:Receved", newMessage);
         } catch (error) {
-            console.log("Error while sending group message.");
+            console.log("Error while sending group message.", error);
         }
     });
 
     socket.on("poolVote", async (data) => {
-        console.log(data);
         socket.to(data.groupname).emit("poolVote", data);
     });
     socket.on("vote:pool:add", async (data) => {
         const { GroupId, selectedOption, time, PollID } = data;
-        console.log(data);
         io.to(GroupId).emit("vote:pool:Update", data);
     });
 
+    socket.on("typing", async (username) => {
+
+        socket.to(username).emit("typing", { username: name, istyping: true });
+    });
+
+    socket.on("not:typing", async (username) => {
+        socket.to(username).emit("typing", { username: name, istyping: false });
+    });
+
+    socket.on("OnlineStutas", async (username) => {
+        const isonline = await redis.sismember("OnlineUserList", username);
+        if (isonline) {
+            io.to(name).emit("OnlineStutasdetails", {
+                username,
+                isonline: true,
+            });
+        } else {
+            io.to(name).emit("OnlineStutasdetails", {
+                username,
+                isonline: false,
+            });
+        }
+    });
     // Handle disconnecting from the socket
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
+        socket.broadcast.emit("OnlineStutasdetails", {
+            username: name,
+            isonline: false,
+        });
         socket.leave(name);
+        await Deletvalue(`onlineStutas${name}`);
+        await redis.srem("OnlineUserList", name);
     });
 };
 

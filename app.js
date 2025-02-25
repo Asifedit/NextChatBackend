@@ -5,11 +5,11 @@ const { instrument } = require("@socket.io/admin-ui");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieparser = require("cookie-parser");
-
+const { DecryptData } = require("./config/Crtipto");
 const router = require("./Router/Rought");
-const { redis } = require("./Middleware/redis"); 
+const { redis } = require("./Middleware/redis");
 const { handelRequest } = require("./Sockets/handelRequest");
-
+const {DecryptedData} =require("./Middleware/SocketMiddeleware")
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -25,7 +25,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieparser());
 app.use(express.urlencoded({ extended: true }));
-
 
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
@@ -44,6 +43,7 @@ app.use(async (req, res, next) => {
 });
 
 app.use("/req", router);
+io.use(DecryptedData);
 
 io.use((socket, next) => {
     try {
@@ -66,6 +66,7 @@ io.use((socket, next) => {
     }
 });
 
+
 mongoose
     .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {
         useNewUrlParser: true,
@@ -75,7 +76,6 @@ mongoose
     .catch((err) => console.log(err));
 
 io.on("connection", (socket) => handelRequest(socket, io));
-
 
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
