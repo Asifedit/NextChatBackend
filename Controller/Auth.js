@@ -129,15 +129,7 @@ const VerifiResistor = async (req, res) => {
     if (!username || !password || !email || !token) {
         return res.status(404).json({ message: "Modification Not Allow !" });
     }
-    const userTOKEN = await TempToken.findOne({
-        username,
-        token,
-    });
-    if (!userTOKEN)
-        return res.status(400).json({ messages: "token not found" });
-    if (userTOKEN.token != token) {
-        return res.status(400).json({ message: "token not matching" });
-    }
+    
     const refreshToken = jwt.sign(
         { username },
         process.env.jwt_RefreshToken_Secret,
