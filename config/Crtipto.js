@@ -4,8 +4,8 @@ function decryptData(req, res, next) {
     const { encryptedData, iv, authTag, encryptedAESKey } = req.body;
     // console.log(req.body);
     if (!encryptedData) {
-        next();
-    }
+       return next();
+    }    
     try {
         const privateKeyPem = process.env.PRIVATE_KEY;
         const privateKey = crypto.createPrivateKey(privateKeyPem);

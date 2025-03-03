@@ -60,20 +60,22 @@ const rateLimitation = async (bucketName, limit, expiration) => {
 
         if (!exists) {
             await redis.set(key, limit, "EX", expiration);
-            return { decision: true, remaining: limit };
+            return { R: "N", remaining: limit };
         }
-
         const remaining = await redis.multi().decr(key).get(key).exec();
-
-        if (remaining && remaining[0][1] >= 0) {
-            return { decision: true, remaining: remaining[0][1] };
+        if (remaining && remaining[0][1] >= Math.floor(limit * 0.7)) {
+            return { R: "N", remaining: remaining[0][1] };
+        } else if (remaining && remaining[0][1] >= Math.floor(limit * 0.5)) {
+            return { R: "M", remaining: remaining[0][1] };
+        } else if (remaining && remaining[0][1] >= Math.floor(limit * 0.2)) {
+            return { R: "H", remaining: remaining[0][1] };
         } else {
             await redis.set(key, 0);
-            return { decision: false, remaining: 0 };
+            return { R: "VH", remaining: remaining[0][1] };
         }
     } catch (error) {
         console.error("Redis error:", error);
-        return { decision: true, remaining: limit };
+        return { R: " VH", remaining: limit };
     }
 };
 

@@ -60,10 +60,10 @@ const Contacets = async (req, res) => {
                     username: "$followTo.username",
                     profile: "$followTo.profile",
                     Bio: "$followTo.bio",
+                    type: "User",
                 },
             },
         ]);
-
         if (UserContact.length >= 1) {
             return res.status(200).json(UserContact);
         }

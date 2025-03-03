@@ -6,7 +6,13 @@ const { authenticator } = require("otplib");
 const TempToken = require("../model/tempToken");
 const verifyEmail = require("../utils/ValidetEmail");
 const SenEmail = require("../utils/Nodemaler");
-const { SetValue, GrtValue, Deletvalue } = require("../Middleware/redis");
+const bcrypt = require("bcrypt");
+const {
+    SetValue,
+    GrtValue,
+    Deletvalue,
+    rateLimitation,
+} = require("../Middleware/redis");
 
 const Option = {
     httpOnly: true,
@@ -168,7 +174,6 @@ const VerifiResistor = async (req, res) => {
 
 const Login = async (req, res) => {
     const { username, password } = req.body || req.headers;
-    console.log(password);
 
     try {
         if (!username || !password) {
@@ -176,15 +181,82 @@ const Login = async (req, res) => {
                 .status(400)
                 .json({ message: "Please provide both username and password" });
         }
+        const ISCooldwone = JSON.parse(
+            await GrtValue(`LOGIN:FAILDED:TIME:${username}`)
+        );
 
-        const user = await User.findOne({ username });
+        if (ISCooldwone) {
+            const cashpasword = await GrtValue(`P:U:${username}`);
+            const isMatchPassword = await bcrypt.compare(password, cashpasword);
+            console.log(isMatchPassword);
+
+            const CooldwoneTime = Math.floor(
+                (new Date() - new Date(ISCooldwone.TIME)) / 1000
+            );
+            if (!(CooldwoneTime >= ISCooldwone.delay) && !isMatchPassword) {
+                return res.status(429).json({
+                    message: `Wait more ${ISCooldwone.delay - CooldwoneTime}`,
+                    delay: ISCooldwone.delay - CooldwoneTime,
+                });
+            }
+        }
+
+        const user = await User.findOne({ username }).select("password");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
+        await SetValue(`P:U:${username}`, user.password, 60 * 60 * 1);
         const isMatch = await user.isPasswordVerified(password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Incorrect password" });
+            const responce = await rateLimitation(
+                `LOGIN:FAILDED:${username}`,
+                10,
+                60 * 60 * 10
+            );
+            console.log(responce);
+            if (responce.R == "N") {
+                return res.status(400).json({ message: "Incorrect password" });
+            }
+
+            if (responce.R == "M") {
+                await SetValue(
+                    `LOGIN:FAILDED:TIME:${username}`,
+                    JSON.stringify({
+                        TIME: new Date().toISOString(),
+                        delay: 1 * 10,
+                    }),
+                    60 * 60 * 10
+                );
+                return res
+                    .status(429)
+                    .json({ message: "Incorrect password", delay: 1 * 60 });
+            }
+            if (responce.R == "H") {
+                await SetValue(
+                    `LOGIN:FAILDED:TIME:${username}`,
+                    JSON.stringify({
+                        TIME: new Date().toISOString(),
+                        delay: 3 * 60,
+                    }),
+                    60 * 60 * 10
+                );
+                return res
+                    .status(429)
+                    .json({ message: "Incorrect password", delay: 3 * 60 });
+            }
+            if (responce.R == "VH") {
+                await SetValue(
+                    `LOGIN:FAILDED:TIME:${username}`,
+                    JSON.stringify({
+                        TIME: new Date().toISOString(),
+                        delay: 5 * 60,
+                    }),
+                    60 * 60 * 10
+                );
+                return res
+                    .status(429)
+                    .json({ message: "Incorrect password", delay: 5 * 60 });
+            }
         }
         const ChackTwoFaStutas = await Userconfig.findOne({
             username: username,
@@ -200,6 +272,13 @@ const Login = async (req, res) => {
                 });
             }
         }
+        const resp = await Deletvalue([
+            `bucket:LOGIN:FAILDED:${username}`,
+            `LOGIN:FAILDED:TIME:${username}`,
+            `P:U:${username}`,
+        ]);
+        console.log("resp", resp);
+
         const accessToken = jwt.sign(
             { username },
             process.env.jwt_AcessToken_Secret,
@@ -514,4 +593,3 @@ module.exports = {
     Disable2fa,
     DisablePin,
 };
- 

@@ -81,7 +81,7 @@ const Newlogin = async (req, res) => {
                     username: "$UserData.username",
                     profile: "$UserData.profile",
                     type: "User",
-                    Bio: "$UserData.Bio",
+                    Bio: "$UserData.bio",
                 },
             },
         ]);
