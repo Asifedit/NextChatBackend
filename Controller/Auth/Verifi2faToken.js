@@ -1,49 +1,13 @@
-const User = require("../model/user_model");
-const Userconfig = require("../model/UserConfig");
+const User = require("../../model/user_model");
+const Userconfig = require("../../model/UserConfig");
 const jwt = require("jsonwebtoken");
-const QRCode = require("qrcode");
 const { authenticator } = require("otplib");
-const TempToken = require("../model/tempToken");
-const verifyEmail = require("../utils/ValidetEmail");
-const SenEmail = require("../utils/Nodemaler");
-const bcrypt = require("bcrypt");
-const {
-    SetValue,
-    GrtValue,
-    Deletvalue,
-    rateLimitation,
-} = require("../Middleware/redis");
 
 const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
 };
-
-function CreateToken(length = 6) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let token = "";
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        token += characters[randomIndex];
-    }
-    return token;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const Verifi2faToken = async (req, res) => {
     const { code } = req.body;
@@ -95,15 +59,4 @@ const Verifi2faToken = async (req, res) => {
     }
 };
 
-module.exports = {
-    VerifiResistor,
-    Login,
-    Resistor,
-    logout,
-    SetUp2fa,
-    Verifi2fa,
-    PinOpration,
-    Verifi2faToken,
-    Disable2fa,
-    DisablePin,
-};
+module.exports = Verifi2faToken;

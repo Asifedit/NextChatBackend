@@ -1,20 +1,18 @@
 const Contain = require("../../model/Contain_model");
 const User = require("../../model/user_model");
-const userprofile = async (req, res) => {    
-    const limit = process.env.SerchFrofileDAtaLimit || 2;
-    const { username, page } = req.body;
-    
-    if (!username || page == undefined) {
+const userprofile = async (req, res) => {
+    const limit = process.env.SerchFrofileDAtaLimit || 1;
+    const { username, LastPosteTime } = req.body;
+    if (!username) {
         return res.status(400).json({ message: "Unexpacted Error" });
     }
-    if (page == 1) {
+    if (!LastPosteTime) {
         const UserProfileData = await User.aggregate([
             {
                 $match: {
                     username: username,
                 },
             },
-            
             {
                 $lookup: {
                     foreignField: "Fllower",
@@ -45,6 +43,7 @@ const userprofile = async (req, res) => {
                 },
             },
         ]);
+
         const UserPost = await Contain.find({ CreatBy: username })
             .select(["-__v"])
             .limit(limit);
@@ -54,11 +53,13 @@ const userprofile = async (req, res) => {
             [UserPost, { ContainType: "Posts" }],
         ]);
     } else {
-        const UserPost = await Contain.find({ CreatBy: req.username })
-            .select(["-__v", "-CreatBy"])
-            .skip((page - 1) * limit)
+        const UserPost = await Contain.find({
+            CreatBy: username,
+            createdAt: { $gt: LastPosteTime },
+        })
+            .select(["-__v"])
             .limit(limit);
-
+        
         if (UserPost.length) {
             return res.status(200).json([[UserPost, { ContainType: "Posts" }]]);
         } else {

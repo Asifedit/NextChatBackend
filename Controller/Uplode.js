@@ -26,7 +26,6 @@ const HandelText = async (req, res) => {
             ContainType: "text",
         }).save();
         if (data) {
-            console.log("data", data);
             res.status(200).json({ message: "successful Uploded" });
         }
     } catch (error) {

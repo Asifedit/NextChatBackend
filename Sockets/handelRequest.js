@@ -13,12 +13,14 @@ const handelRequest = async (socket, io) => {
     }
     await redis.sadd("OnlineUserList", name);
 
-    socket.on("start:call", async ({ username }) => {
+    socket.on("start:call", async ({ username }, callback) => {
         if (!io.sockets.adapter.rooms.has(username)) {
+            callback("failed");
             socket.emit("Error", { message: "User Not Connected" });
             return;
         }
         socket.to(username).emit("incoming:call", { username: name });
+        
     });
 
     socket.on("call:responce", async ({ username, responce }) => {
@@ -49,7 +51,6 @@ const handelRequest = async (socket, io) => {
 
     // Handling direct and group messages
     socket.on("Send", async (message, callback) => {
-
         const { text, for: target } = message;
         try {
             if (io.sockets.adapter.rooms.has(target)) {
@@ -148,7 +149,6 @@ const handelRequest = async (socket, io) => {
     });
 
     socket.on("typing", async (username) => {
-
         socket.to(username).emit("typing", { username: name, istyping: true });
     });
 

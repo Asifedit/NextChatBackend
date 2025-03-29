@@ -6,8 +6,10 @@ const OnConnection = async (name, socket) => {
         username: name,
         isonline: true,
     });
+
     await SetValue(`onlineStutas${name}`, new Date().toISOString());
     socket.join(name);
+
     const joinded = await joindedGroup
         .find({ Member: name })
         .select(["GroupName", "-_id"]);

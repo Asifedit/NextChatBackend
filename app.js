@@ -6,16 +6,16 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieparser = require("cookie-parser");
 const { DecryptData } = require("./config/Crtipto");
-const router = require("./Router/Rought");
+const router = require("./Router/MainRought");
 const { redis } = require("./Middleware/redis");
 const { handelRequest } = require("./Sockets/handelRequest");
-const {DecryptedData} =require("./Middleware/SocketMiddeleware")
+const { DecryptedData } = require("./Middleware/SocketMiddeleware");
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
 
 const corsOptions = {
-    origin: [process.env.FRONTEND_URL,  "http://localhost:5173"],
+    origin: [process.env.FRONTEND_URL, "http://192.168.43.107:5173"],
     credentials: true,
     methods: ["GET", "POST"],
 };
@@ -65,7 +65,6 @@ io.use((socket, next) => {
         console.error(error);
     }
 });
-
 
 mongoose
     .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {

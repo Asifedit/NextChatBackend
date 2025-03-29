@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+exports.router = router;
 
 const upload = require("../config/Multer");
 const explore = require("../Controller/Explore");
@@ -19,46 +20,24 @@ const { Verify } = require("../config/verify");
 const { userprofile } = require("../Controller/Read/UserProfile");
 const { ViweSinglePOst } = require("../Controller/Read/SinglePost");
 const { report } = require("../Controller/Report");
-
-const {
-    Login,
-    logout,
-    Resistor,
-    SetUp2fa,
-    Verifi2fa,
-    Disable2fa,
-    DisablePin,
-    PinOpration,
-    VerifiResistor,
-    Verifi2faToken,
-} = require("../Controller/Auth");
+const AuthRought = require("./AuthRought");
 
 router.use(decryptData);
+router.use(AuthRought);
+
+router.post("/getkey", decryptData);
 
 router.get("/contact", Verify, Contacets);
 router.get("/mygroup", Verify, Contacets);
-
-router.post("/login", Login);
-router.post("/register", Resistor);
-router.post("/getkey", decryptData);
-router.post("/register/verifi", VerifiResistor);
-
 router.post("/find", Verify, Search);
 router.post("/follow", Verify, follow);
-router.post("/logout", Verify, logout);
 router.post("/post/get", ViweSinglePOst);
 router.post("/explore", Verify, explore);
 router.post("/action/like", Verify, Like);
-router.post("/setup-2fa", Verify, SetUp2fa);
-router.post("/add/pin", Verify, PinOpration);
-router.post("/disable/pin", Verify, DisablePin);
 router.post("/myprofile", Verify, myprofile);
 router.post("/join/group", Verify, JoinGroup);
-router.post("/verify-2fa", Verify, Verifi2fa);
-router.post("/disable-2fa", Verify, Disable2fa);
 router.post("/all/data/get", Verify, Newlogin);
 router.post("/create/pool", Verify, CreatePool);
-router.post("/verifi/tf/token", Verifi2faToken);
 router.post("/action/comment", Verify, comment);
 router.post("/upload/text", Verify, HandelText);
 router.post("/userprofile", Verify, userprofile);

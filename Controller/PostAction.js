@@ -47,6 +47,7 @@ const comment = async (req, res) => {
         await responce.save();
         res.status(200).json(responce);
     } catch (error) {
+        console.log(error)
         res.status(400).json({ message: "somting wrong" });
     }
 };

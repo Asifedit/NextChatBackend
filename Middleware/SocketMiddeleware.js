@@ -4,10 +4,7 @@ const DecryptedData = (socket, next) => {
     const originalEmit = socket.emit;
     const originalOn = socket.on;
 
-    // Intercept emit (outgoing data)
     socket.emit = function (event, data, callback) {
-        console.log(`Emitting event: ${event}`, data);
-
         if (typeof callback === "function") {
             const wrappedCallback = (...args) => {
                 console.log(`Callback for event "${event}" called with:`, args);
