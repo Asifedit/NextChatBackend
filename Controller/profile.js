@@ -1,15 +1,14 @@
 const User = require("../model/user_model");
-const path = require("path")
-const fs = require("fs")
-const imageKit = require("../Middleware/imagekit")
+const path = require("path");
+const fs = require("fs");
+const imageKit = require("../Middleware/imagekit");
 
 const UpdateProfile = async (req, res) => {
     const data = req.body;
     try {
         const updateFields = {};
         if (data.bio) updateFields.bio = data.bio;
-        if (data.birthDate)
-            updateFields.BirthDay = data.birthDate;
+        if (data.birthDate) updateFields.BirthDay = data.birthDate;
         if (Array.isArray(data.favorites) && data.favorites.length > 0) {
             updateFields.userAbout = data.favorites.map((fav) => {
                 return {
@@ -20,17 +19,16 @@ const UpdateProfile = async (req, res) => {
         }
         if (req.file) {
             updateFields.profilePicture = `/uploads/${req.file.filename}`;
-            const UplodedFilePath = path.join(__dirname, `../Public/${req.file.filename}`);
+            const UplodedFilePath = path.join(
+                __dirname,
+                `../Public/${req.file.filename}`
+            );
             const responce = imageKit.upload({
                 file: fs.createReadStream(UplodedFilePath),
                 fileName: req.file.filename,
                 isPrivateFile: true,
-                
             });
-            console.log(responce);
-            
         }
-        console.log(updateFields);
 
         const updateQuery = {
             $set: updateFields,

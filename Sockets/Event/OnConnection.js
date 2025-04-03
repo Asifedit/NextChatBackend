@@ -1,5 +1,5 @@
 const joindedGroup = require("../../model/Group/GroupJoindedModel");
-const { SetValue, GrtValue } = require("../../Middleware/redis");
+const { redis } = require("../../Middleware/redis");
 const OnConnection = async (name, socket) => {
     console.log(`${name} connected with ${socket.id}`);
     socket.broadcast.emit("OnlineStutasdetails", {
@@ -7,7 +7,7 @@ const OnConnection = async (name, socket) => {
         isonline: true,
     });
 
-    await SetValue(`onlineStutas${name}`, new Date().toISOString());
+    redis.hset(`Detailes:${name}`, "socketId", socket.id);
     socket.join(name);
 
     const joinded = await joindedGroup

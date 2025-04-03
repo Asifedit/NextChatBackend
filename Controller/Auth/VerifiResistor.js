@@ -1,10 +1,7 @@
 const User = require("../../model/user_model");
 const jwt = require("jsonwebtoken");
 
-const {
-    GrtValue,
-    Deletvalue,
-} = require("../../Middleware/redis");
+const { GrtValue, Deletvalue } = require("../../Middleware/redis");
 
 const Option = {
     httpOnly: true,
@@ -19,7 +16,7 @@ const VerifiResistor = async (req, res) => {
 
     if (!VerificationToken)
         return res
-            .status(300)
+            .status(401)
             .json({ messages: "Somthing Wrong  Resistor Again" });
 
     const verifi = jwt.verify(
@@ -41,7 +38,6 @@ const VerifiResistor = async (req, res) => {
     if (!username || !password || !email || !token) {
         return res.status(404).json({ message: "Modification Not Allow !" });
     }
-
     const refreshToken = jwt.sign(
         { username },
         process.env.jwt_RefreshToken_Secret,
@@ -52,7 +48,6 @@ const VerifiResistor = async (req, res) => {
         process.env.jwt_AcessToken_Secret,
         { expiresIn: process.env.jwt_AcessToken_Expair }
     );
-
     try {
         const newUser = new User({
             username,
@@ -60,9 +55,7 @@ const VerifiResistor = async (req, res) => {
             email: email,
             refToken: refreshToken,
         });
-
         await newUser.save();
-
         return res
             .status(200)
             .clearCookie("VerificationToken")

@@ -21,11 +21,13 @@ const { userprofile } = require("../Controller/Read/UserProfile");
 const { ViweSinglePOst } = require("../Controller/Read/SinglePost");
 const { report } = require("../Controller/Report");
 const AuthRought = require("./AuthRought");
-
+const setup = require("../Controller/SetupConnection");
 router.use(decryptData);
 router.use(AuthRought);
 
 router.post("/getkey", decryptData);
+
+router.post("/user/setup", Verify, setup);
 
 router.get("/contact", Verify, Contacets);
 router.get("/mygroup", Verify, Contacets);

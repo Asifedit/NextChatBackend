@@ -20,7 +20,6 @@ const handelRequest = async (socket, io) => {
             return;
         }
         socket.to(username).emit("incoming:call", { username: name });
-        
     });
 
     socket.on("call:responce", async ({ username, responce }) => {
@@ -177,7 +176,6 @@ const handelRequest = async (socket, io) => {
             isonline: false,
         });
         socket.leave(name);
-        await Deletvalue(`onlineStutas${name}`);
         await redis.srem("OnlineUserList", name);
     });
 };

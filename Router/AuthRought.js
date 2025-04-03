@@ -10,9 +10,11 @@ const DisablePin = require("../Controller/Auth/DisablePin");
 const PinOpration = require("../Controller/Auth/PinOpration");
 const VerifiResistor = require("../Controller/Auth/VerifiResistor");
 const Verifi2faToken = require("../Controller/Auth/Verifi2faToken");
-
+const BackupCode = require("../Controller/Auth/BackupCode")
 const { Verify } = require("../config/verify");
 
+
+router.get("/backup/code", BackupCode);
 router.post("/login", Login);
 router.post("/register", Resistor);
 router.post("/register/verifi", VerifiResistor);

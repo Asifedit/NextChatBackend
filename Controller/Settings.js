@@ -93,9 +93,78 @@ const myprofile = async (req, res) => {
                         else: false,
                     },
                 },
+                BackupEmail: {
+                    $cond: {
+                        if: {
+                            $gt: [
+                                {
+                                    $strLenCP: {
+                                        $ifNull: ["$result.Backup_Email", ""],
+                                    },
+                                },
+                                0,
+                            ],
+                        },
+                        then: {
+                            $concat: [
+                                {
+                                    $substrCP: [
+                                        {
+                                            $arrayElemAt: [
+                                                {
+                                                    $split: [
+                                                        "$result.Backup_Email",
+                                                        "@",
+                                                    ],
+                                                },
+                                                0,
+                                            ],
+                                        },
+                                        0,
+                                        3,
+                                    ],
+                                },
+                                "****@",
+                                {
+                                    $arrayElemAt: [
+                                        {
+                                            $split: [
+                                                "$result.Backup_Email",
+                                                "@",
+                                            ],
+                                        },
+                                        1,
+                                    ],
+                                },
+                            ],
+                        },
+                        else: false,
+                    },
+                },
+                BackupCodes: {
+                    $cond: {
+                        if: {
+                            $gt: [
+                                {
+                                    $size: {
+                                        $ifNull: ["$result.Backup_codes", []],
+                                    },
+                                },
+                                0,
+                            ],
+                        },
+                        then: {
+                            $size: {
+                                $ifNull: ["$result.Backup_codes", []],
+                            },
+                        },
+                        else: false,
+                    },
+                },
             },
         },
-    ]);    
+    ]);
+    console.log(user[0]);
     res.status(200).json({ data: user[0] });
 };
 

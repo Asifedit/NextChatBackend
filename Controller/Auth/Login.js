@@ -2,7 +2,11 @@ const User = require("../../model/user_model");
 const Userconfig = require("../../model/UserConfig");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { SetValue, GrtValue, rateLimitation } = require("../../Middleware/redis");
+const {
+    SetValue,
+    GrtValue,
+    rateLimitation,
+} = require("../../Middleware/redis");
 
 const Option = {
     httpOnly: true,
@@ -12,7 +16,6 @@ const Option = {
 
 const Login = async (req, res) => {
     const { username, password } = req.body || req.headers;
-
     try {
         if (!username || !password) {
             return res

@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const verifyEmail = require("../../utils/ValidetEmail");
 const SenEmail = require("../../utils/Nodemaler");
 const { SetValue } = require("../../Middleware/redis");
-const CreateToken = require("./CreateToken")
+const CreateToken = require("./CreateToken");
 const Option = {
     httpOnly: true,
     secure: true,
@@ -71,7 +71,7 @@ const Resistor = async (req, res) => {
         );
 
         return res
-            .status(201)
+            .status(307)
             .cookie("VerificationToken", VerificationToken, Option)
             .json({ message: "User created successfully" });
     } catch (error) {

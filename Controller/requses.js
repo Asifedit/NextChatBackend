@@ -2,37 +2,46 @@ const User = require("../model/user_model");
 const Contact = require("../model/Fllow_model");
 
 const follow = async (req, res) => {
-    const { username } = req.body;
-    console.log(username);
-    const Contactadded = await Contact.updateOne(
-        {
-            FllowBy: req.username,
+    try {
+        const { username } = req.body;
+        const loggedInUser = req.username;
+
+        if (username === loggedInUser) {
+            return res
+                .status(400)
+                .json({ message: "You cannot follow yourself." });
+        }
+        const existingFollow = await Contact.findOne({
+            FllowBy: loggedInUser,
             Fllower: username,
-        },
-        {
-            $setOnInsert: {
-                FllowBy: req.username,
-                Fllower: username,
-            },
-        },
-        { upsert: true }
-    );
+        });
+        if (existingFollow) {
+            return res
+                .status(400)
+                .json({ message: "You are already following this user." });
+        }
 
-    const user = await User.findOne({ username: username }).select([
-        "username",
-        "profile",
-    ]);
+        // Add follow relationship
+        const newFollow = new Contact({
+            FllowBy: loggedInUser,
+            Fllower: username,
+        });
+        await newFollow.save();
 
-    req.io.to(req.username).emit("Contacet", user);
-    req.io.to(username).emit("Notification", {
-        Type: "Follower",
-        Text: "You Got A New Follower",
-        Profile: user?.profile || "",
-        From: req.username,
-        timpStamp: Date(),
-        id: Contactadded._id,
-    });
-    res.status(200).json({ message: "susessfully fllow" });
+        // Emit follow notification to the followed user
+        req.io.to(username).emit("Notification", {
+            Type: "Follower",
+            Text: "You got a new follower!",
+            From: loggedInUser,
+            timpStamp: new Date(),
+            id: newFollow._id,
+        });
+
+        res.status(200).json({ message: "Successfully followed the user." });
+    } catch (error) {
+        console.error("Follow Error:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
 };
 
 const Contacets = async (req, res) => {
@@ -67,12 +76,11 @@ const Contacets = async (req, res) => {
         if (UserContact.length >= 1) {
             return res.status(200).json(UserContact);
         }
-        res.status(400).json({ message: "No Contacet Found" });
+        res.status(204).json({ message: "No Contacet Founded" });
     } catch (error) {
         console.log(error);
     }
 };
-
 
 const FindUser = async (req, res) => {
     const { username } = req.body;

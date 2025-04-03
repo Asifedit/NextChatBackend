@@ -18,7 +18,6 @@ const Like = async (req, res) => {
                 upsert: true,
             }
         );
-        console.log(newLike);
         if (newLike.likeUserid) {
             return res.status(400).json({ message: "Alrady Like" });
         }
@@ -34,9 +33,7 @@ const Like = async (req, res) => {
 
 const comment = async (req, res) => {
     const { cId } = req.body;
-    console.log(cId);
     const { postId, commentText, IsComment } = req.body;
-    console.log(postId);
     try {
         const responce = new CommentModel({
             commentUserId: req.username,
@@ -47,13 +44,13 @@ const comment = async (req, res) => {
         await responce.save();
         res.status(200).json(responce);
     } catch (error) {
-        console.log(error)
+        console.error(error)
         res.status(400).json({ message: "somting wrong" });
     }
 };
 const GetComment = async (req, res) => {
     const { pid, cflag } = req.body;
-    console.log(cflag);
+    console.error(cflag);
 
     const limit = 1;
     try {
@@ -102,10 +99,9 @@ const GetComment = async (req, res) => {
                 },
             },
         ]);
-        console.log("comment", Command);
         res.status(200).json(Command);
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(400).json({ message: "erroe " });
     }
 };

@@ -1,6 +1,6 @@
 const ImageKit = require("imagekit");
 require("dotenv").config(); // Load environment variables
-
+const fs = require("fs")
 // Initialize the ImageKit instance with environment variables
 const imagekit = new ImageKit({
     publicKey: process.env.ik_publicKey,
@@ -8,13 +8,14 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.ik_urlEndpoint, 
 });
 
-const uploadFile = async (file, fileName, isPrivateFile = TextTrackCueList) => {
+const uploadFile = async (file, fileName, isPrivateFile = false) => {
 
     try {
-        const response = imagekit.upload({
-            file, 
-            fileName, 
-            isPrivateFile, 
+        const response = await imagekit.upload({
+            file: fs.readFileSync(file),
+            fileName,
+            isPrivateFile,
+            useUniqueFileName: true,
         });
         return response; 
     } catch (error) {
@@ -43,6 +44,6 @@ const getTempUrlWithSignature = (filePath, expireSeconds = 3600) => {
     return generateSignedUrl(filePath, expireSeconds);
 };
 
-// Exporting the functions for use in other parts of the app
+
 module.exports = { uploadFile, getTempUrlWithSignature };
 

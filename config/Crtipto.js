@@ -2,7 +2,6 @@ const crypto = require("crypto");
 
 function decryptData(req, res, next) {
     const { encryptedData, iv, authTag, encryptedAESKey } = req.body;
-    // console.log(req.body);
     if (!encryptedData) {
        return next();
     }    
@@ -33,7 +32,7 @@ function decryptData(req, res, next) {
         req.body = JSON.parse(decrypted);
         next();
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ messages: "require value not found" });
     }
 }
@@ -66,7 +65,7 @@ function DecryptData(encryptedPayload) {
         decrypted += decipher.final("utf-8");
         return decrypted;
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
 }
 module.exports = {

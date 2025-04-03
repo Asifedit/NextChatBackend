@@ -4,8 +4,6 @@ const Contain = require("../model/Contain_model");
 
 const explore = async (req, res) => {
     const { LastPostTime, FirstPostTime, flag } = req.body;
-    console.log(LastPostTime, FirstPostTime);
-
     const limit = 10; 
     const ContacetData = async () => {
         if (LastPostTime || FirstPostTime) {

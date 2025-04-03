@@ -16,6 +16,12 @@ const userconfigSchema = new Schema(
         PassKey_Token: {
             type: String,
         },
+        Backup_codes: {
+            type: [String],
+        },
+        Backup_Email: {
+            type: String,
+        },
     },
     { timestamps: true }
 );

@@ -1,7 +1,7 @@
 
 const QRCode = require("qrcode");
 const { authenticator } = require("otplib");
-
+const {SetValue} = require("../../middleware/redis");
 
 const SetUp2fa = async (req, res) => {
     const secret = authenticator.generateSecret();

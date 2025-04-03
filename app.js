@@ -20,7 +20,8 @@ const corsOptions = {
     methods: ["GET", "POST"],
 };
 
-app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
+// app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieparser());
@@ -32,10 +33,10 @@ const io = require("socket.io")(server, {
     cors: true,
 });
 
-instrument(io, {
-    namespaceName: "/custom/username=asif",
-    auth: false,
-});
+// instrument(io, {
+//     namespaceName: "/custom/username=asif",
+//     auth: false,
+// });
 
 app.use(async (req, res, next) => {
     req.io = io;
@@ -43,7 +44,6 @@ app.use(async (req, res, next) => {
 });
 
 app.use("/req", router);
-io.use(DecryptedData);
 
 io.use((socket, next) => {
     try {

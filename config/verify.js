@@ -7,9 +7,13 @@ const Option = {
 };
 const Verify = async (req, res, next) => {
     const Token = req.cookies.AccessToken;
+    // verifi sesson
+    // if (req.path != "/user/setup" && !req.headers.sessiontoken) {
+    //     return res.status(400).json({ message: "Invalid Session" });
+    // }
     if (!Token) {
         return res
-            .status(302)
+            .status(401)
             .json({ message: "we need login fast", RedirectTo: "/login" });
     }
     try {
@@ -17,7 +21,7 @@ const Verify = async (req, res, next) => {
         req.username = user.username;
         next();
     } catch (error) {
-        console.log("error name is ", error.name);
+        console.error("error name is ", error.name);
         if (error.name === "TokenExpiredError") {
             try {
                 const RefresToken = req.cookies.RefreshToken;
@@ -54,7 +58,7 @@ const Verify = async (req, res, next) => {
                 req.username = GetPaload.username;
                 return next();
             } catch (error) {
-                console.log("Verify Error From RsfresToken", error);
+                console.error("Verify Error From RsfresToken", error);
                 res.status(400).json({ message: "Somthing Wrong login again" });
             }
         } else if (
@@ -72,4 +76,3 @@ const Verify = async (req, res, next) => {
     }
 };
 module.exports = { Verify };
- 
