@@ -27,6 +27,12 @@ const explore = async (req, res) => {
                 {
                     $limit: limit,
                 },
+                {
+                    $project: {
+                        username: 1,
+                        profile: 1,
+                    },
+                },
             ]);
 
             return [suggestedUsers, { DataType: "contacet" }];

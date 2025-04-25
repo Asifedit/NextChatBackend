@@ -164,7 +164,6 @@ const myprofile = async (req, res) => {
             },
         },
     ]);
-    console.log(user[0]);
     res.status(200).json({ data: user[0] });
 };
 

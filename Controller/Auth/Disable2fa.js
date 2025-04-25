@@ -15,13 +15,11 @@ const Disable2fa = async (req, res) => {
                 .status(404)
                 .json({ message: "User configuration not found." });
         }
-        console.log(userconfig);
 
         const isValid = authenticator.verify({
             token: code,
             secret: userconfig.TwoFa_App_Token,
         });
-        console.log(isValid);
 
         if (isValid) {
             await Userconfig.updateOne(

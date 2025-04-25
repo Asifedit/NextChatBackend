@@ -24,7 +24,6 @@ const CreateGroup = async (req, res) => {
 
 const CreatePool = async (req, res) => {
     const { topic, options, explanation, groupname } = req.body;
-    console.log(req.body);
 
     if (!topic || !options || !groupname) {
         res.status(400).json({ message: "Missing required fields" });

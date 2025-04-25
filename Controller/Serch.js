@@ -62,7 +62,6 @@ const Search = async (req, res) => {
             user,
         };
 
-        console.log(result);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);
