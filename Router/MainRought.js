@@ -22,6 +22,13 @@ const { ViweSinglePOst } = require("../Controller/Read/SinglePost");
 const { report } = require("../Controller/Report");
 const AuthRought = require("./AuthRought");
 const setup = require("../Controller/SetupConnection");
+const UserInfo = require("../Controller/UserInfo");
+const ResetPass = require("../Controller/Auth/ResetPass");
+const {
+    ResetpassEmail,
+    VerifyAndUpdate,
+} = require("../Controller/Auth/resetPassEmail");
+
 router.use(decryptData);
 router.use(AuthRought);
 
@@ -31,7 +38,13 @@ router.post("/user/setup", Verify, setup);
 
 router.get("/contact", Verify, Contacets);
 router.get("/mygroup", Verify, Contacets);
+
+router.get("/reset/password", ResetPass);
+router.post("/reset/pass/email", ResetpassEmail);
+router.post("/reset/passemail/verify", VerifyAndUpdate);
+
 router.post("/find", Verify, Search);
+router.post("/info/user", Verify, UserInfo);
 router.post("/follow", Verify, follow);
 router.post("/post/get", ViweSinglePOst);
 router.post("/explore", Verify, explore);

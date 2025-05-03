@@ -10,15 +10,16 @@ const DisablePin = require("../Controller/Auth/DisablePin");
 const PinOpration = require("../Controller/Auth/PinOpration");
 const VerifiResistor = require("../Controller/Auth/VerifiResistor");
 const Verifi2faToken = require("../Controller/Auth/Verifi2faToken");
-const BackupCode = require("../Controller/Auth/BackupCode")
+const BackupCode = require("../Controller/Auth/BackupCode");
 const { Verify } = require("../config/verify");
-
+const ResetPass = require("../Controller/Auth/ResetPass");
 
 router.get("/backup/code", BackupCode);
 router.post("/login", Login);
 router.post("/register", Resistor);
 router.post("/register/verifi", VerifiResistor);
 router.post("/verifi/tf/token", Verifi2faToken);
+router.post("/reset/password", ResetPass);
 
 router.post("/logout", Verify, logout);
 router.post("/setup-2fa", Verify, SetUp2fa);

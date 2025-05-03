@@ -12,7 +12,10 @@ const follow = async (req, res) => {
                 .json({ message: "You cannot follow yourself." });
         }
         const existingFollow = await Contact.find({
-            $or: [{ FllowBy: loggedInUser }, { Fllower: loggedInUser }],
+            $or: [
+                { FllowBy: loggedInUser, Fllower: username },
+                { Fllower: loggedInUser, FllowBy: username },
+            ],
         });
 
         const isFollowByExists = existingFollow.some(

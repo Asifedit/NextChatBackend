@@ -7,6 +7,7 @@ const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
 const Verifi2faToken = async (req, res) => {

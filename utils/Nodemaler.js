@@ -5,12 +5,12 @@ require("dotenv").config();
 
 // Set up Nodemailer transport
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
+    host:process.env.Mail_Host || "smtp.gmail.com",
+    port: process.env.Mail_Port || 587,
     secure: false,
     auth: {
-        user: process.env.MyMail, // Email from environment variables
-        pass: process.env.MAIL_application_password, // App-specific password
+        user: process.env.MyMail, 
+        pass: process.env.MAIL_application_password, 
     },
 });
 
@@ -39,13 +39,16 @@ const sendMail = async (mailType, to, otherData = {}) => {
             case "notification":
                 subject = otherData.subject || "New Notification";
                 break;
+            case "ResetPassEmail":
+                subject = otherData.subject || "Reset Nexchat password";
+                break;
             default:
                 throw new Error("Invalid email type");
         }
 
         // Set up the email options
         const mailOptions = {
-            from: process.env.MyMail,
+            from: '"NexChat Team" <nextchatfrontend.pages.dev>',
             to: to,
             subject: subject,
             html: htmlContent,

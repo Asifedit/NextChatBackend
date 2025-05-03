@@ -4,6 +4,7 @@ const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 const Verify = async (req, res, next) => {
     const Token = req.cookies.AccessToken;
@@ -34,8 +35,11 @@ const Verify = async (req, res, next) => {
                 }).select(["refToken"]);
                 if (RefresToken !== getUser.refToken) {
                     return res
-                        .status(300)
-                        .json({ message: "Your login expair " });
+                        .status(401)
+                        .json({
+                            message: "Your Login expair plese login again",
+                            RedirectTo: "/login",
+                        });
                 }
                 const NewAccessToken = jwt.sign(
                     {

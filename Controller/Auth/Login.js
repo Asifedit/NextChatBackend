@@ -1,7 +1,6 @@
 const User = require("../../model/user_model");
 const Userconfig = require("../../model/UserConfig");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const {
     SetValue,
     GrtValue,
@@ -12,6 +11,7 @@ const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
 const Login = async (req, res) => {
@@ -27,13 +27,10 @@ const Login = async (req, res) => {
         );
 
         if (ISCooldwone) {
-            const cashpasword = await GrtValue(`P:U:${username}`);
-            const isMatchPassword = await bcrypt.compare(password, cashpasword);
-
             const CooldwoneTime = Math.floor(
                 (new Date() - new Date(ISCooldwone.TIME)) / 1000
             );
-            if (!(CooldwoneTime >= ISCooldwone.delay) && !isMatchPassword) {
+            if (!(CooldwoneTime >= ISCooldwone.delay)) {
                 return res.status(429).json({
                     message: `Wait more ${ISCooldwone.delay - CooldwoneTime}`,
                     delay: ISCooldwone.delay - CooldwoneTime,
