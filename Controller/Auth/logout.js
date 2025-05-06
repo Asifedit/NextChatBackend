@@ -2,6 +2,9 @@ const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
+    maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    path: "/",
+    domain: "nextchatfrontend.pages.dev",
 };
 
 const logout = (req, res) => {

@@ -7,7 +7,9 @@ const Option = {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    path: "/",
+    domain: "nextchatfrontend.pages.dev",
 };
 
 const Verifi2faToken = async (req, res) => {
