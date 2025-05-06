@@ -39,11 +39,8 @@ const generateSignedUrl = (filePath, expireSeconds = 60* 60*1) => {
     }
 };
 
-// Wrapper for generating temp URL (signed URL)
-const getTempUrlWithSignature = (filePath, expireSeconds = 3600) => {
-    return generateSignedUrl(filePath, expireSeconds);
-};
 
 
-module.exports = { uploadFile, getTempUrlWithSignature };
+
+module.exports = { uploadFile, generateSignedUrl };
 

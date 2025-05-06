@@ -24,6 +24,7 @@ const AuthRought = require("./AuthRought");
 const setup = require("../Controller/SetupConnection");
 const UserInfo = require("../Controller/UserInfo");
 const ResetPass = require("../Controller/Auth/ResetPass");
+const UnseenMsg = require("../Controller/Read/UnseenMsg")
 const {
     ResetpassEmail,
     VerifyAndUpdate,
@@ -44,6 +45,7 @@ router.post("/reset/pass/email", ResetpassEmail);
 router.post("/reset/passemail/verify", VerifyAndUpdate);
 
 router.post("/find", Verify, Search);
+router.post("/msg/new", Verify, UnseenMsg);
 router.post("/info/user", Verify, UserInfo);
 router.post("/follow", Verify, follow);
 router.post("/post/get", ViweSinglePOst);

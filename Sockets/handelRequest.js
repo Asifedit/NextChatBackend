@@ -87,23 +87,6 @@ const handelRequest = async (socket, io) => {
         }
     });
 
-    // Handle unsending a message
-    socket.on("UnSend:MSG", async (data) => {
-        const { username } = data;
-        try {
-            const oldMsg = await MsgModel.findOneAndUpdate(
-                { username, isSend: false },
-                { isSend: true },
-                { new: true }
-            ).select("-isSend -__v");
-
-            if (oldMsg) {
-                socket.to(name).emit("receiveMessage", oldMsg); // Send updated message to the user
-            }
-        } catch (error) {
-            console.log("Error while unsending message.", error);
-        }
-    });
 
     // Handle joining a group
     socket.on("Join:group", async (data) => {

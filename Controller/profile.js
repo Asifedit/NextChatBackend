@@ -1,42 +1,37 @@
 const User = require("../model/user_model");
-const path = require("path");
-const fs = require("fs");
-const imageKit = require("../Middleware/imagekit");
+const { uploadFile } = require("../Middleware/imagekit");
 
 const UpdateProfile = async (req, res) => {
-    const data = req.body;
     try {
+        const { bio, birthDate, favorites } = req.body;
         const updateFields = {};
-        if (data.bio) updateFields.bio = data.bio;
-        if (data.birthDate) updateFields.BirthDay = data.birthDate;
-        if (Array.isArray(data.favorites) && data.favorites.length > 0) {
-            updateFields.userAbout = data.favorites.map((fav) => {
-                return {
-                    Topic: fav.Topic || "",
-                    Data: fav.Data || "",
-                };
-            });
+
+        // Update simple fields
+        if (bio) updateFields.bio = bio;
+        if (birthDate) updateFields.BirthDay = birthDate;
+
+        // Update favorites (array of objects)
+        if (Array.isArray(favorites) && favorites.length > 0) {
+            updateFields.userAbout = favorites.map((fav) => ({
+                Topic: fav.Topic || "",
+                Data: fav.Data || "",
+            }));
         }
+
+        // Handle profile image upload
         if (req.file) {
-            updateFields.profilePicture = `/uploads/${req.file.filename}`;
-            const UplodedFilePath = path.join(
-                __dirname,
-                `../Public/${req.file.filename}`
+            const uploadedResponse = await uploadFile(
+                req.file.path,
+                req.file.filename,
+                false
             );
-            const responce = imageKit.upload({
-                file: fs.createReadStream(UplodedFilePath),
-                fileName: req.file.filename,
-                isPrivateFile: true,
-            });
+            updateFields.profile = uploadedResponse.url;
         }
 
-        const updateQuery = {
-            $set: updateFields,
-        };
-
-        const user = await User.findOneAndUpdate(
+        // Find and update the user
+        const updatedUser = await User.findOneAndUpdate(
             { username: req.username },
-            updateQuery,
+            { $set: updateFields },
             {
                 new: true,
                 projection: {
@@ -47,14 +42,16 @@ const UpdateProfile = async (req, res) => {
                 },
             }
         );
-        if (!user) {
+
+        if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        return res.status(200).json(user);
+        return res.status(200).json(updatedUser);
     } catch (error) {
-        console.error(error);
+        console.error("UpdateProfile error:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
+
 module.exports = { UpdateProfile };

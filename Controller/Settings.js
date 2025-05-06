@@ -28,6 +28,7 @@ const myprofile = async (req, res) => {
                 userAbout: 1,
                 bio: 1,
                 BirthDay: 1,
+                profile:1,
                 EnablePinAuth: {
                     $cond: {
                         if: {
