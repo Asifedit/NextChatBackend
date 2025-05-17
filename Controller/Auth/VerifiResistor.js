@@ -1,7 +1,7 @@
 const User = require("../../model/user_model");
 const jwt = require("jsonwebtoken");
 
-const { GrtValue, Deletvalue } = require("../../Middleware/redis");
+const { GrtValue, Deletvalue } = require("../../Redis/redis");
 
 const Option = {
     httpOnly: true,

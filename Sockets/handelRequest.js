@@ -1,7 +1,7 @@
 const MsgModel = require("../model/msg_model");
 const MesseageModel = require("../model/Group/Messeage");
 const OnConnection = require("./Event/OnConnection");
-const { Deletvalue, redis } = require("../Middleware/redis");
+const { Deletvalue, redis } = require("../Redis/redis");
 const handelRequest = async (socket, io) => {
     let name = socket.username;
 

@@ -1,4 +1,4 @@
-const { redis } = require("../Middleware/redis")
+const { redis } = require("../Redis/redis")
 
 
 // this it reatelimitator 

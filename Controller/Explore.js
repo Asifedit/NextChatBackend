@@ -1,7 +1,7 @@
 const User = require("../model/user_model");
 const Contact = require("../model/Fllow_model");
 const Contain = require("../model/Contain_model");
-
+const {} = require("../Redis/redis")
 const explore = async (req, res) => {
     const { LastPostTime, FirstPostTime, flag } = req.body;
     const limit = 10; 

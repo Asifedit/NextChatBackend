@@ -1,4 +1,4 @@
-const { redis } = require("../Middleware/redis");
+const { redis } = require("../Redis/redis");
 const rateLimiter = async (req, res, next) => {
     const username = req.username;
     const ip = req.ip.toString().replace(":","");

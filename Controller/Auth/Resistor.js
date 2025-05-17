@@ -2,7 +2,7 @@ const User = require("../../model/user_model");
 const jwt = require("jsonwebtoken");
 const verifyEmail = require("../../utils/ValidetEmail");
 const SenEmail = require("../../utils/Nodemaler");
-const { SetValue } = require("../../Middleware/redis");
+const { SetValue } = require("../../Redis/redis");
 const CreateToken = require("./CreateToken");
 const Option = {
     httpOnly: true,

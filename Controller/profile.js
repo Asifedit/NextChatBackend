@@ -2,6 +2,10 @@ const User = require("../model/user_model");
 const { uploadFile } = require("../Middleware/imagekit");
 
 const UpdateProfile = async (req, res) => {
+
+
+
+
     try {
         const { bio, birthDate, favorites } = req.body;
         const updateFields = {};

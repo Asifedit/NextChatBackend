@@ -13,9 +13,9 @@ const Verifi2faToken = require("../Controller/Auth/Verifi2faToken");
 const BackupCode = require("../Controller/Auth/BackupCode");
 const { Verify } = require("../config/verify");
 const ResetPass = require("../Controller/Auth/ResetPass");
-
+const { LoginRateLimiter,OtpRateLimiter } = require("../Redis/Middleware/RateLimiter");
 router.get("/backup/code", BackupCode);
-router.post("/login", Login);
+router.post("/login", LoginRateLimiter, Login);
 router.post("/register", Resistor);
 router.post("/register/verifi", VerifiResistor);
 router.post("/verifi/tf/token", Verifi2faToken);

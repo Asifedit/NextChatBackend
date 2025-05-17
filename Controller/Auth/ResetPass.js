@@ -1,5 +1,4 @@
 const Usermodel = require("../../model/user_model");
-const { SetValue, GrtValue, Deletvalue } = require("../../Middleware/redis");
 const bcrypt = require("bcrypt");
 const ResetPass = async (req, res) => {
     const { resetBy, username } = req.body;

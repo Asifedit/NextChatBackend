@@ -1,19 +1,15 @@
 const express = require("express");
 const http = require("http");
-const jwt = require("jsonwebtoken");
-const { instrument } = require("@socket.io/admin-ui");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cookieparser = require("cookie-parser");
-const { DecryptData } = require("./config/Crtipto");
 const router = require("./Router/MainRought");
-const { redis } = require("./Middleware/redis");
 const { handelRequest } = require("./Sockets/handelRequest");
-const { DecryptedData } = require("./Middleware/SocketMiddeleware");
 require("dotenv").config();
 const PORT = process.env.PORT || 5000;
 const app = express();
-
+const VerifyAuth = require("./Sockets/Middleware/socketAuth");
+const wsDecrypt = require("./Sockets/Middleware/wsDecrypt");
 const corsOptions = {
     origin: [process.env.FRONTEND_URL, "http://192.168.43.107:5173"],
     credentials: true,
@@ -33,11 +29,6 @@ const io = require("socket.io")(server, {
     cors: true,
 });
 
-// instrument(io, {
-//     namespaceName: "/custom/username=asif",
-//     auth: false,
-// });
-
 app.use(async (req, res, next) => {
     req.io = io;
     next();
@@ -45,26 +36,8 @@ app.use(async (req, res, next) => {
 
 app.use("/req", router);
 
-io.use((socket, next) => {
-    try {
-        const token = socket.request.headers.cookie
-            ?.split("; ")
-            .find((c) => c.startsWith("AccessToken="))
-            ?.split("=")[1];
-
-        if (!token) {
-            return next(new Error("Authentication error: No token provided"));
-        }
-        socket.username = jwt.verify(
-            token,
-            process.env.jwt_AcessToken_Secret
-        ).username;
-
-        next();
-    } catch (error) {
-        console.error(error);
-    }
-});
+io.use(VerifyAuth);
+io.use(wsDecrypt);
 
 mongoose
     .connect(process.env.MongoDBUri || "mongodb://localhost:27017/msg", {

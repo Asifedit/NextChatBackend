@@ -3,7 +3,7 @@ const { authenticator } = require("otplib");
 
 const {
     GrtValue,
-} = require("../../Middleware/redis");
+} = require("../../Redis/redis");
 
 
 

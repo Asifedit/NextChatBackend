@@ -24,7 +24,11 @@ const AuthRought = require("./AuthRought");
 const setup = require("../Controller/SetupConnection");
 const UserInfo = require("../Controller/UserInfo");
 const ResetPass = require("../Controller/Auth/ResetPass");
-const UnseenMsg = require("../Controller/Read/UnseenMsg")
+const UnseenMsg = require("../Controller/Read/UnseenMsg");
+const {
+    OtpRateLimiter,
+    RsendOtpLimiter,
+} = require("../Redis/Middleware/RateLimiter");
 const {
     ResetpassEmail,
     VerifyAndUpdate,
@@ -41,8 +45,8 @@ router.get("/contact", Verify, Contacets);
 router.get("/mygroup", Verify, Contacets);
 
 router.get("/reset/password", ResetPass);
-router.post("/reset/pass/email", ResetpassEmail);
-router.post("/reset/passemail/verify", VerifyAndUpdate);
+router.post("/reset/pass/email", RsendOtpLimiter, ResetpassEmail);
+router.post("/reset/passemail/verify", OtpRateLimiter, VerifyAndUpdate);
 
 router.post("/find", Verify, Search);
 router.post("/msg/new", Verify, UnseenMsg);
