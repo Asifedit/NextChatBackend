@@ -25,6 +25,7 @@ const setup = require("../Controller/SetupConnection");
 const UserInfo = require("../Controller/UserInfo");
 const ResetPass = require("../Controller/Auth/ResetPass");
 const UnseenMsg = require("../Controller/Read/UnseenMsg");
+const ConfigConnection = require("../Controller/ConfigureConnection")
 const {
     OtpRateLimiter,
     RsendOtpLimiter,
@@ -42,12 +43,12 @@ router.post("/getkey", decryptData);
 router.post("/user/setup", Verify, setup);
 
 router.get("/contact", Verify, Contacets);
-router.get("/mygroup", Verify, Contacets);
 
 router.get("/reset/password", ResetPass);
 router.post("/reset/pass/email", RsendOtpLimiter, ResetpassEmail);
 router.post("/reset/passemail/verify", OtpRateLimiter, VerifyAndUpdate);
 
+router.post("/config", Verify, ConfigConnection);
 router.post("/find", Verify, Search);
 router.post("/msg/new", Verify, UnseenMsg);
 router.post("/info/user", Verify, UserInfo);

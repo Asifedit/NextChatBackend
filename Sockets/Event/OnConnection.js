@@ -8,6 +8,8 @@ const OnConnection = async (name, socket) => {
     });
 
     // redis.hset(`Detailes:${name}`, "socketId", socket.id);
+    // redis.hset(`Detailes:${name}`, "socketId1", socket.id);
+    // redis.del(`Detailes:${name}`);
     socket.join(name);
 
     const joinded = await joindedGroup

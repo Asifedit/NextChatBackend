@@ -73,8 +73,9 @@ const report = async (req, res) => {
                 Math.random() * 999
             )}${path.extname(req.file.originalname)}`;
             try {
-                // const uploaded = await uploadFile(filePath, fileName, true);
-                imageUrl = "uploaded.url";
+                const uploaded = await uploadFile(filePath, fileName, true);
+                console.log(uploaded);
+                imageUrl = uploaded.url;
             } catch (error) {
                 console.error("Error uploading image:", error);
                 return res
@@ -137,12 +138,17 @@ const report = async (req, res) => {
                             inline: true,
                         },
                         {
+                            name: " 🖼️ Img",
+                            value:  imageUrl ? imageUrl : 'no img',
+                            inline: false,
+                        },
+                        {
                             name: "🕓 Submitted At",
                             value: new Date().toLocaleString(),
                             inline: false,
                         },
                     ],
-                    image: imageUrl ? { url: imageUrl } : undefined,
+
                     footer: {
                         text:
                             "📡 FREGMENT Reporting System • v1.0 • " +
@@ -155,7 +161,9 @@ const report = async (req, res) => {
         };
 
         try {
-            await sendDiscordWebhook(DISCORD_WEBHOOK_URL, embedPayload);
+            const responce = await sendDiscordWebhook(DISCORD_WEBHOOK_URL, embedPayload);
+            console.log(responce);
+          
         } catch (err) {
             console.error("Failed to send Discord webhook:", err);
         }

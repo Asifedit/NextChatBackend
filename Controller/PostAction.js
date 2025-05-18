@@ -10,7 +10,7 @@ const Like = async (req, res) => {
                 .json({ message: "User ID and Post ID are required" });
         }
         const newLike = await LikeModel.findOneAndUpdate(
-            { postId: pid },
+            { postId: pid, likeUserid: req.username },
             {
                 $set: { postId: pid, likeUserid: req.username },
             },
