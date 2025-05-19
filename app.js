@@ -22,11 +22,23 @@ app.use(express.json());
 app.use(cookieparser());
 app.use(express.urlencoded({ extended: true }));
 
+
 const server = http.createServer(app);
 const io = require("socket.io")(server, {
     transports: ["websocket", "polling"],
     cors: true,
 });
+app.options("*", cors());
+app.use((req, res, next) => {
+    res.header(
+        "Access-Control-Allow-Origin",
+        "https://nextchatfrontend.pages.dev"
+    );
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Vary", "Origin");
+    next();
+});
+
 
 app.use(async (req, res, next) => {
     req.io = io;

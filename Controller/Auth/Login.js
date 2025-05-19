@@ -9,7 +9,7 @@ const cookieOptions = {
 };
 
 const login = async (req, res) => {
-    const { username, password, recaptchaToken } = req.body || req.headers;
+    const { username, password } = req.body || req.headers;
 
     try {
         // Validate input

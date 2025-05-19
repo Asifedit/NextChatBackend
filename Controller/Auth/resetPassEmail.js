@@ -22,14 +22,14 @@ const ResetpassEmail = async (req, res) => {
 
         await SetValue(`Reset:email:${username}`, code, 60 * 60);
 
-        // const mailResponce = await SenEmail("ResetPassEmail", email, {
-        //     name: username,
-        //     verificationCode: code,
-        // });
+        const mailResponce = await SenEmail("ResetPassEmail", email, {
+            name: username,
+            verificationCode: code,
+        });
 
-        // if (!mailResponce.success) {
-        //     return res.status(200).json({ messages: "error to send OTP" });
-        // }
+        if (!mailResponce.success) {
+            return res.status(200).json({ messages: "error to send OTP" });
+        }
         res.status(200).json({
             message: "email sucessfully sended",
             delay: req.delay,
@@ -44,9 +44,8 @@ const ResetpassEmail = async (req, res) => {
 
 const VerifyAndUpdate = async (req, res) => {
     const { email, username, OTP, password } = req.body;
-    console.log(email, username);
 
-    if (!email || !username || !OTP || !password) {
+    if (!email || !username || !OTP  || !password) {
         return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -79,5 +78,6 @@ const VerifyAndUpdate = async (req, res) => {
         message: "Password updated successfully.",
     });
 };
+
 
 module.exports = { ResetpassEmail, VerifyAndUpdate };

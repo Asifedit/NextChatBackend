@@ -18,8 +18,8 @@ const Like = async (req, res) => {
                 upsert: true,
             }
         );
-        if (newLike.likeUserid) {
-            return res.status(400).json({ message: "Alrady Like" });
+        if (newLike?.likeUserid) {
+            return res.status(400).json({ mesage: "Alrady Like" });
         }
 
         res.status(200).json({
@@ -44,7 +44,7 @@ const comment = async (req, res) => {
         await responce.save();
         res.status(200).json(responce);
     } catch (error) {
-        console.error(error)
+        console.error(error);
         res.status(400).json({ message: "somting wrong" });
     }
 };
