@@ -55,15 +55,15 @@ const Resistor = async (req, res) => {
         }
 
         const OTP = await CreateToken();
-        await SetValue(`Verification:OTP:${username}`, OTP, 60 * 60 * 5);
 
-        const mailResponce = await SenEmail("verification", email, {
-            name: username,
-            verificationCode: OTP,
-        });
-        if (!mailResponce.success) {
-            return res.status(200).json({ messages: "error to send code" });
-        }
+        // const mailResponce = await SenEmail("verification", email, {
+        //     name: username,
+        //     verificationCode: OTP,
+        // });
+        // if (!mailResponce.success) {
+        //     return res.status(200).json({ messages: "error to send code" });
+        // }
+        await SetValue(`Verification:OTP:${username}`, OTP, 60 * 60 * 5);
 
         const VerificationToken = jwt.sign(
             { username, password, email, token: OTP },
@@ -71,10 +71,12 @@ const Resistor = async (req, res) => {
             { expiresIn: process.env.jwt_VerificationToken_Expair }
         );
 
-        return res
-            .status(201)
-            .cookie("VerificationToken", VerificationToken, Option)
-            .json({ message: "User created successfully" });
+        return res.status(201).json({
+            message: "User created successfully",
+            cookie: {
+                VerificationToken: VerificationToken,
+            },
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Fail to Resistor" });

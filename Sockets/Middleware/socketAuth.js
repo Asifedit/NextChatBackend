@@ -1,11 +1,7 @@
 const jwt = require("jsonwebtoken");
 const VerifyAuth = (socket, next) => {
     try {
-        const token = socket.request.headers.cookie
-            ?.split("; ")
-            .find((c) => c.startsWith("AccessToken="))
-            ?.split("=")[1];
-
+        const token = socket.handshake.auth.AccessToken;
         if (!token) {
             return next(new Error("Authentication error: No token provided"));
         }

@@ -8,7 +8,8 @@ const generateRandomNumber = () => {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, "../public"));
+        cb(null, "/tmp");
+
     },
     filename: (req, file, cb) => {
         const timestamp = Date.now();

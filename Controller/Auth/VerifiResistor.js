@@ -13,7 +13,7 @@ const Option = {
 const VerifiResistor = async (req, res) => {
     const { code } = req.body;
     const VerificationToken =
-        req.cookies.VerificationToken || req.body.VerificationToken;
+        req.cookies.VerificationToken || req.headers.verificationtoken;
 
     if (!VerificationToken)
         return res
@@ -60,9 +60,13 @@ const VerifiResistor = async (req, res) => {
         return res
             .status(200)
             .clearCookie("VerificationToken")
-            .cookie("AccessToken", accessToken, Option)
-            .cookie("RefreshToken", refreshToken, Option)
-            .json({ message: "User created successfully" });
+            .json({
+                message: "User created successfully",
+                cookie: {
+                    AccessToken: accessToken,
+                    RefreshToken: refreshToken,
+                },
+            });
     } catch (error) {
         console.error(error);
 

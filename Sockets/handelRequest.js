@@ -78,7 +78,6 @@ const handelRequest = async (socket, io) => {
                     isSend: false,
                 });
                 await newMessage.save();
-                const { For, Msg, createdAt, isSend, From } = newMessage;
 
                 callback(newMessage);
             }
@@ -86,7 +85,6 @@ const handelRequest = async (socket, io) => {
             console.log("Error while sending message.", error);
         }
     });
-
 
     // Handle joining a group
     socket.on("Join:group", async (data) => {

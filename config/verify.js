@@ -7,11 +7,8 @@ const Option = {
     maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 const Verify = async (req, res, next) => {
-    const Token = req.cookies.AccessToken;
-    // verifi sesson
-    // if (req.path != "/user/setup" && !req.headers.sessiontoken) {
-    //     return res.status(400).json({ message: "Invalid Session" });
-    // }
+    const Token = req.cookies.AccessToken || req.headers.accesstoken;
+    
     if (!Token) {
         return res
             .status(401)
@@ -25,7 +22,8 @@ const Verify = async (req, res, next) => {
         console.error("error name is ", error.name);
         if (error.name === "TokenExpiredError") {
             try {
-                const RefresToken = req.cookies.RefreshToken;
+                const RefresToken =
+                    req.cookies.RefreshToken || req.headers.refreshtoken;
                 const GetPaload = jwt.verify(
                     RefresToken,
                     process.env.jwt_RefreshToken_Secret
@@ -34,12 +32,10 @@ const Verify = async (req, res, next) => {
                     username: GetPaload.username,
                 }).select(["refToken"]);
                 if (RefresToken !== getUser.refToken) {
-                    return res
-                        .status(401)
-                        .json({
-                            message: "Your Login expair plese login again",
-                            RedirectTo: "/login",
-                        });
+                    return res.status(401).json({
+                        message: "Your Login expair plese login again",
+                        RedirectTo: "/login",
+                    });
                 }
                 const NewAccessToken = jwt.sign(
                     {
@@ -57,8 +53,12 @@ const Verify = async (req, res, next) => {
                 getUser.refToken = NewRefresToken;
                 await getUser.save();
                 res.status(200)
-                    .cookie("AccessToken", NewAccessToken, Option)
-                    .cookie("RefreshToken", NewRefresToken, Option);
+                    .json({
+                        cookie: {
+                            AccessToken: NewAccessToken,
+                            RefreshToken: NewRefresToken,
+                        },
+                    });
                 req.username = GetPaload.username;
                 return next();
             } catch (error) {

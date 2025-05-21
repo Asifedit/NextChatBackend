@@ -12,7 +12,7 @@ const Option = {
 
 const Verifi2faToken = async (req, res) => {
     const { code } = req.body;
-    const Lctoken = req.cookies.LcToken;
+    const Lctoken = req.cookies.LcToken || req.headers.lctoken;
     if (!code) {
         return res.status(400).json({ message: "code is require" });
     }
@@ -51,9 +51,13 @@ const Verifi2faToken = async (req, res) => {
         return res
             .status(200)
             .clearCookie("LcToken")
-            .cookie("AccessToken", accessToken, Option)
-            .cookie("RefreshToken", refreshToken, Option)
-            .json({ message: "User logged in successfully" });
+            .json({
+                message: "User logged in successfully",
+                cookie: {
+                    AccessToken: accessToken,
+                    RefreshToken: refreshToken,
+                },
+            });
     } catch (error) {
         res.status(500).json({ message: "error during process" });
         console.log(error);

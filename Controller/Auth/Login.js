@@ -46,10 +46,12 @@ const login = async (req, res) => {
 
             return res
                 .status(200)
-                .cookie("LcToken", loginConfirmationToken, cookieOptions)
                 .json({
                     message: "Two-factor authentication required",
                     redirectTo: "TwoFaAppVerification",
+                    cookie: {
+                        LcToken: loginConfirmationToken,
+                    },
                 });
         }
 
@@ -73,9 +75,13 @@ const login = async (req, res) => {
         // Return success response with tokens
         return res
             .status(200)
-            .cookie("AccessToken", accessToken, cookieOptions)
-            .cookie("RefreshToken", refreshToken, cookieOptions)
-            .json({ message: "User logged in successfully" });
+            .json({
+                message: "User logged in successfully",
+                cookie: {
+                    AccessToken: accessToken,
+                    refreshToken: refreshToken,
+                },
+            });
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({
