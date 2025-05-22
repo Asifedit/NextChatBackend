@@ -3,13 +3,6 @@ const Userconfig = require("../../model/UserConfig");
 const jwt = require("jsonwebtoken");
 const { authenticator } = require("otplib");
 
-const Option = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-};
-
 const Verifi2faToken = async (req, res) => {
     const { code } = req.body;
     const Lctoken = req.cookies.LcToken || req.headers.lctoken;
@@ -50,7 +43,6 @@ const Verifi2faToken = async (req, res) => {
 
         return res
             .status(200)
-            .clearCookie("LcToken")
             .json({
                 message: "User logged in successfully",
                 cookie: {

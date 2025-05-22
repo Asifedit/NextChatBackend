@@ -55,6 +55,7 @@ const Newlogin = async (req, res) => {
                     Admin: "$GroupData.Admin",
                     GroupDescription: "$GroupData.GroupDescription",
                     Role: 1,
+                    __v:1,
                 },
             },
         ]);

@@ -26,6 +26,7 @@ const UserInfo = require("../Controller/UserInfo");
 const ResetPass = require("../Controller/Auth/ResetPass");
 const UnseenMsg = require("../Controller/Read/UnseenMsg");
 const ConfigConnection = require("../Controller/ConfigureConnection")
+const ChackUpdatedProfile = require("../Controller/ChackUpdatedProfile")
 const {
     OtpRateLimiter,
     RsendOtpLimiter,
@@ -48,8 +49,9 @@ router.get("/reset/password", ResetPass);
 router.post("/reset/pass/email", RsendOtpLimiter, ResetpassEmail);
 router.post("/reset/passemail/verify", OtpRateLimiter, VerifyAndUpdate);
 
-router.post("/config", Verify, ConfigConnection);
 router.post("/find", Verify, Search);
+router.post("/chackupdate", Verify, ChackUpdatedProfile);
+router.post("/config", Verify, ConfigConnection);
 router.post("/msg/new", Verify, UnseenMsg);
 router.post("/info/user", Verify, UserInfo);
 router.post("/follow", Verify, follow);

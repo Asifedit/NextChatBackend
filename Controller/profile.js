@@ -31,7 +31,10 @@ const UpdateProfile = async (req, res) => {
         // Find and update the user
         const updatedUser = await User.findOneAndUpdate(
             { username: req.username },
-            { $set: updateFields },
+            {
+                $set: updateFields,
+                $inc: { __v: 1 },
+            },
             {
                 new: true,
                 projection: {

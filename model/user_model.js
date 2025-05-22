@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const bcrypt = require("bcrypt");
-const { GrtValue, SetValue } = require("../Redis/redis");
-const {getTempUrlWithSignature} =require("../Middleware/imagekit")
 const UserSchema = new Schema(
     {
         username: {

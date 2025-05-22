@@ -59,7 +59,6 @@ const VerifiResistor = async (req, res) => {
         await newUser.save();
         return res
             .status(200)
-            .clearCookie("VerificationToken")
             .json({
                 message: "User created successfully",
                 cookie: {

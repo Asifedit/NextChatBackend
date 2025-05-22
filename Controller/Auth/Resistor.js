@@ -56,13 +56,13 @@ const Resistor = async (req, res) => {
 
         const OTP = await CreateToken();
 
-        // const mailResponce = await SenEmail("verification", email, {
-        //     name: username,
-        //     verificationCode: OTP,
-        // });
-        // if (!mailResponce.success) {
-        //     return res.status(200).json({ messages: "error to send code" });
-        // }
+        const mailResponce = await SenEmail("verification", email, {
+            name: username,
+            verificationCode: OTP,
+        });
+        if (!mailResponce.success) {
+            return res.status(200).json({ messages: "error to send code" });
+        }
         await SetValue(`Verification:OTP:${username}`, OTP, 60 * 60 * 5);
 
         const VerificationToken = jwt.sign(

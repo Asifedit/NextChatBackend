@@ -50,7 +50,7 @@ const follow = async (req, res) => {
 
         const userdetails = await User.findOne({
             username: username,
-        }).select(["username", "profile", "bio", "_id"]);
+        }).select(["username", "profile", "bio", "_id" ,"__v"]);
 
         res.status(200).json({
             message: "Successfully followed the user.",
@@ -88,6 +88,7 @@ const Contacets = async (req, res) => {
                     profile: "$followTo.profile",
                     Bio: "$followTo.bio",
                     type: "User",
+                    __v:1,
                 },
             },
         ]);
