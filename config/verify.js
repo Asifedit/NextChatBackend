@@ -52,7 +52,7 @@ const Verify = async (req, res, next) => {
                 );
                 getUser.refToken = NewRefresToken;
                 await getUser.save();
-                res.status(200)
+                return res.status(200)
                     .json({
                         cookie: {
                             AccessToken: NewAccessToken,

@@ -1,14 +1,6 @@
 const User = require("../../model/user_model");
 const jwt = require("jsonwebtoken");
-
 const { GrtValue, Deletvalue } = require("../../Redis/redis");
-
-const Option = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-};
 
 const VerifiResistor = async (req, res) => {
     const { code } = req.body;

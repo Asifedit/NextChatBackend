@@ -15,7 +15,6 @@ const corsOptions = {
     methods: ["GET", "POST"],
 };
 
-// app.use(express.static("./node_modules/@socket.io/admin-ui/ui/dist"));
 
 app.use(cors(corsOptions));
 app.use(express.json());

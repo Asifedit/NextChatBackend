@@ -43,6 +43,8 @@ router.post("/getkey", decryptData);
 
 router.post("/user/setup", Verify, setup);
 
+
+
 router.get("/contact", Verify, Contacets);
 
 router.get("/reset/password", ResetPass);

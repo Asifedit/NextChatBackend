@@ -61,13 +61,14 @@ const handelRequest = async (socket, io) => {
                 });
                 await newMessage.save();
 
-                const { For, Msg, createdAt, isSend, From } = newMessage;
+                const { For, Msg, createdAt, isSend, From,_id } = newMessage;
                 socket.to(target).emit("receiveMessage", {
                     For,
                     Msg,
                     createdAt,
                     isSend,
                     From,
+                    _id
                 });
                 callback(newMessage);
             } else {
@@ -76,6 +77,7 @@ const handelRequest = async (socket, io) => {
                     Msg: text,
                     From: name,
                     isSend: false,
+                    _id,
                 });
                 await newMessage.save();
 
@@ -106,6 +108,7 @@ const handelRequest = async (socket, io) => {
     // Handle sending group messages
     socket.on("Group:msg:send", async (data) => {
         const { groupname, value } = data;
+        console.log(data);
         try {
             const newMessage = new MesseageModel({
                 Msg: value,

@@ -17,6 +17,7 @@ const transporter = nodemailer.createTransport({
 // Send email function
 const sendMail = async (mailType, to, otherData = {}) => {
     try {
+        return {error:"Unable To Send Mail"}
         // Define template path
         const templatePath = path.join(
             __dirname,
